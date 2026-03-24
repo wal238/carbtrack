@@ -1,31 +1,27 @@
 import { StyleSheet, Text, type TextProps } from 'react-native';
-
-import { useThemeColor } from '@/hooks/use-theme-color';
+import { useThemeColors } from '@/lib/theme';
+import { typography } from '@/constants/tokens';
 
 export type ThemedTextProps = TextProps & {
-  lightColor?: string;
-  darkColor?: string;
   type?: 'default' | 'title' | 'defaultSemiBold' | 'subtitle' | 'link';
 };
 
 export function ThemedText({
   style,
-  lightColor,
-  darkColor,
   type = 'default',
   ...rest
 }: ThemedTextProps) {
-  const color = useThemeColor({ light: lightColor, dark: darkColor }, 'text');
+  const colors = useThemeColors();
 
   return (
     <Text
       style={[
-        { color },
+        { color: colors.text },
         type === 'default' ? styles.default : undefined,
         type === 'title' ? styles.title : undefined,
         type === 'defaultSemiBold' ? styles.defaultSemiBold : undefined,
         type === 'subtitle' ? styles.subtitle : undefined,
-        type === 'link' ? styles.link : undefined,
+        type === 'link' ? [styles.link, { color: colors.primary }] : undefined,
         style,
       ]}
       {...rest}
@@ -35,26 +31,30 @@ export function ThemedText({
 
 const styles = StyleSheet.create({
   default: {
-    fontSize: 16,
-    lineHeight: 24,
+    fontFamily: typography.fontFamily.body,
+    fontSize: typography.fontSize.body,
+    lineHeight: 22,
   },
   defaultSemiBold: {
-    fontSize: 16,
-    lineHeight: 24,
+    fontFamily: typography.fontFamily.bodySemiBold,
+    fontSize: typography.fontSize.body,
+    lineHeight: 22,
     fontWeight: '600',
   },
   title: {
-    fontSize: 32,
+    fontFamily: typography.fontFamily.heading,
+    fontSize: typography.fontSize.heading,
     fontWeight: 'bold',
     lineHeight: 32,
   },
   subtitle: {
-    fontSize: 20,
+    fontFamily: typography.fontFamily.title,
+    fontSize: typography.fontSize.title,
     fontWeight: 'bold',
   },
   link: {
-    lineHeight: 30,
-    fontSize: 16,
-    color: '#0a7ea4',
+    fontFamily: typography.fontFamily.body,
+    fontSize: typography.fontSize.body,
+    lineHeight: 22,
   },
 });

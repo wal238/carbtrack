@@ -1,98 +1,132 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { StyleSheet, View, Text, ScrollView, Pressable } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
+import { useThemeColors } from '@/lib/theme';
+import { spacing, typography } from '@/constants/tokens';
+import { Card } from '@/components/ui/Card';
+import { Mascot } from '@/components/Mascot';
+import { GlucoseChart } from '@/components/charts/GlucoseChart';
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+export default function TrendScreen() {
+  const colors = useThemeColors();
 
-export default function HomeScreen() {
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.bg }]}>
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        {/* Header */}
+        <View style={styles.header}>
+          <Text style={[styles.title, { color: colors.text }]}>My Trend</Text>
+          <View style={styles.headerActions}>
+            <Pressable style={[styles.headerBtn, { backgroundColor: colors.primary }]}>
+              <Ionicons name="add" size={22} color="#0F2027" />
+            </Pressable>
+            <Pressable style={[styles.headerBtn, { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border }]}>
+              <Ionicons name="search" size={20} color={colors.textSecondary} />
+            </Pressable>
+          </View>
+        </View>
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+        {/* Glucose Chart */}
+        <Card>
+          <GlucoseChart compact />
+        </Card>
+
+        {/* Carbs Summary */}
+        <Card>
+          <View style={styles.carbRow}>
+            <Ionicons name="flame" size={20} color={colors.warning} />
+            <Text style={[styles.carbLabel, { color: colors.textSecondary }]}>Carbs today</Text>
+          </View>
+          <View style={[styles.progressBg, { backgroundColor: colors.bg }]}>
+            <View style={[styles.progressFill, { width: '65%', backgroundColor: colors.primary }]} />
+          </View>
+          <Text style={[styles.carbValue, { color: colors.text }]}>
+            195 / 200g
+          </Text>
+        </Card>
+
+        {/* Estimated A1c */}
+        <Card>
+          <View style={styles.a1cRow}>
+            <View>
+              <Text style={[styles.a1cLabel, { color: colors.textSecondary }]}>Estimated A1c</Text>
+              <Text style={[styles.a1cValue, { color: colors.normal }]}>6.8%</Text>
+            </View>
+            <Mascot size={38} expression="happy" />
+          </View>
+        </Card>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
+  container: {
+    flex: 1,
+  },
+  content: {
+    padding: spacing.base,
+    gap: spacing.base,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  title: {
+    fontFamily: typography.fontFamily.title,
+    fontSize: typography.fontSize.title,
+    fontWeight: '800',
+  },
+  headerActions: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+  },
+  headerBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  carbRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: spacing.sm,
+    marginBottom: spacing.sm,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  carbLabel: {
+    fontFamily: typography.fontFamily.caption,
+    fontSize: typography.fontSize.caption,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  progressBg: {
+    height: 6,
+    borderRadius: 3,
+    overflow: 'hidden',
+    marginBottom: spacing.sm,
+  },
+  progressFill: {
+    height: '100%',
+    borderRadius: 3,
+  },
+  carbValue: {
+    fontFamily: typography.fontFamily.bodySemiBold,
+    fontSize: typography.fontSize.body,
+    fontWeight: '600',
+  },
+  a1cRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  a1cLabel: {
+    fontFamily: typography.fontFamily.caption,
+    fontSize: typography.fontSize.caption,
+    marginBottom: spacing.xs,
+  },
+  a1cValue: {
+    fontFamily: typography.fontFamily.display,
+    fontSize: 32,
+    fontWeight: '800',
   },
 });

@@ -1,0 +1,193 @@
+import { StyleSheet, View, Text } from 'react-native';
+import Svg, { Rect, Line, Circle, Path, Text as SvgText } from 'react-native-svg';
+import { spacing, typography, colors } from '@/constants/tokens';
+import { useThemeColors } from '@/lib/theme';
+import { getGlucoseColor } from '@/lib/colors';
+import type { GlucoseDataPoint } from '@/lib/types';
+
+interface GlucoseChartProps {
+  data?: GlucoseDataPoint[];
+  height?: number;
+  compact?: boolean;
+}
+
+// Sample data for stub rendering
+const SAMPLE_DATA: GlucoseDataPoint[] = [
+  { time: '12AM', value: 5.2, unit: 'mmol' },
+  { time: '3AM', value: 4.8, unit: 'mmol' },
+  { time: '6AM', value: 6.1, unit: 'mmol' },
+  { time: '9AM', value: 8.4, unit: 'mmol' },
+  { time: '12PM', value: 11.2, unit: 'mmol' },
+  { time: '3PM', value: 7.6, unit: 'mmol' },
+  { time: '6PM', value: 9.8, unit: 'mmol' },
+  { time: '9PM', value: 6.5, unit: 'mmol' },
+];
+
+const Y_LABELS = [0, 3.9, 10, 16];
+const X_LABELS = ['12AM', '6AM', '12PM', '6PM', '12AM'];
+
+export function GlucoseChart({ data = SAMPLE_DATA, height = 155, compact = false }: GlucoseChartProps) {
+  const themeColors = useThemeColors();
+  const chartWidth = 300;
+  const chartHeight = height - 30;
+  const paddingLeft = 30;
+  const paddingBottom = 20;
+
+  function yScale(value: number) {
+    return chartHeight - (value / 16) * (chartHeight - paddingBottom);
+  }
+
+  function xScale(index: number) {
+    return paddingLeft + (index / (data.length - 1)) * (chartWidth - paddingLeft - 10);
+  }
+
+  // Build bezier path
+  const points = data.map((d, i) => ({ x: xScale(i), y: yScale(d.value) }));
+  let pathD = `M ${points[0].x} ${points[0].y}`;
+  for (let i = 1; i < points.length; i++) {
+    const cp1x = points[i - 1].x + (points[i].x - points[i - 1].x) / 3;
+    const cp2x = points[i].x - (points[i].x - points[i - 1].x) / 3;
+    pathD += ` C ${cp1x} ${points[i - 1].y} ${cp2x} ${points[i].y} ${points[i].x} ${points[i].y}`;
+  }
+
+  return (
+    <View style={styles.container}>
+      {!compact && (
+        <View style={styles.header}>
+          <View>
+            <Text style={[styles.currentValue, { color: colors.glucose.normal }]}>7.2</Text>
+            <Text style={[styles.currentUnit, { color: themeColors.textSecondary }]}>mmol/L</Text>
+          </View>
+          <View style={styles.legend}>
+            <LegendItem color={colors.glucose.low} label="Low" />
+            <LegendItem color={colors.glucose.normal} label="Normal" />
+            <LegendItem color={colors.glucose.warning} label="Warning" />
+            <LegendItem color={colors.glucose.high} label="High" />
+          </View>
+        </View>
+      )}
+
+      <Svg width="100%" height={height} viewBox={`0 0 ${chartWidth} ${height}`}>
+        {/* Target range band */}
+        <Rect
+          x={paddingLeft}
+          y={yScale(10)}
+          width={chartWidth - paddingLeft - 10}
+          height={yScale(3.9) - yScale(10)}
+          fill={colors.glucose.normalMuted}
+          opacity={0.5}
+        />
+
+        {/* Dashed threshold lines */}
+        <Line
+          x1={paddingLeft} y1={yScale(10)} x2={chartWidth - 10} y2={yScale(10)}
+          stroke={colors.glucose.warning} strokeWidth={1} strokeDasharray="4 4" opacity={0.6}
+        />
+        <Line
+          x1={paddingLeft} y1={yScale(3.9)} x2={chartWidth - 10} y2={yScale(3.9)}
+          stroke={colors.glucose.low} strokeWidth={1} strokeDasharray="4 4" opacity={0.6}
+        />
+
+        {/* Y-axis labels */}
+        {Y_LABELS.map((v) => (
+          <SvgText
+            key={v}
+            x={paddingLeft - 5}
+            y={yScale(v) + 4}
+            fontSize={9}
+            fill={themeColors.textMuted}
+            textAnchor="end"
+          >
+            {v}
+          </SvgText>
+        ))}
+
+        {/* Bezier curve */}
+        <Path d={pathD} fill="none" stroke={themeColors.primary} strokeWidth={2} />
+
+        {/* Area fill */}
+        <Path
+          d={`${pathD} L ${points[points.length - 1].x} ${chartHeight - paddingBottom} L ${points[0].x} ${chartHeight - paddingBottom} Z`}
+          fill={themeColors.primary}
+          opacity={0.07}
+        />
+
+        {/* Data points */}
+        {data.map((d, i) => (
+          <Circle
+            key={i}
+            cx={xScale(i)}
+            cy={yScale(d.value)}
+            r={4}
+            fill={getGlucoseColor(d.value, d.unit)}
+            stroke="#FFFFFF"
+            strokeWidth={1.5}
+          />
+        ))}
+
+        {/* X-axis labels */}
+        {X_LABELS.map((label, i) => (
+          <SvgText
+            key={label + i}
+            x={paddingLeft + (i / (X_LABELS.length - 1)) * (chartWidth - paddingLeft - 10)}
+            y={height - 2}
+            fontSize={9}
+            fill={themeColors.textMuted}
+            textAnchor="middle"
+          >
+            {label}
+          </SvgText>
+        ))}
+      </Svg>
+    </View>
+  );
+}
+
+function LegendItem({ color, label }: { color: string; label: string }) {
+  return (
+    <View style={styles.legendItem}>
+      <View style={[styles.legendDot, { backgroundColor: color }]} />
+      <Text style={[styles.legendText, { color }]}>{label}</Text>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    gap: spacing.sm,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    paddingHorizontal: spacing.xs,
+  },
+  currentValue: {
+    fontFamily: typography.fontFamily.display,
+    fontSize: 28,
+    fontWeight: '800',
+  },
+  currentUnit: {
+    fontFamily: typography.fontFamily.caption,
+    fontSize: typography.fontSize.caption,
+  },
+  legend: {
+    flexDirection: 'row',
+    gap: spacing.md,
+    marginTop: spacing.xs,
+  },
+  legendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+  },
+  legendDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  legendText: {
+    fontSize: 9,
+    fontFamily: typography.fontFamily.micro,
+  },
+});
