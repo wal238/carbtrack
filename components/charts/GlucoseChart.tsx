@@ -24,7 +24,6 @@ const SAMPLE_DATA: GlucoseDataPoint[] = [
 ];
 
 const Y_LABELS = [0, 3.9, 10, 16];
-const X_LABELS = ['12AM', '6AM', '12PM', '6PM', '12AM'];
 
 export function GlucoseChart({ data = SAMPLE_DATA, height = 155, compact = false }: GlucoseChartProps) {
   const themeColors = useThemeColors();
@@ -33,15 +32,23 @@ export function GlucoseChart({ data = SAMPLE_DATA, height = 155, compact = false
   const paddingLeft = 30;
   const paddingBottom = 20;
 
+  // Guard against empty data
+  if (data.length === 0) return null;
+
+  const latestReading = data[data.length - 1];
+  const latestColor = getGlucoseColor(latestReading.value, latestReading.unit);
+  const unitLabel = latestReading.unit === 'mmol' ? 'mmol/L' : 'mg/dL';
+
   function yScale(value: number) {
     return chartHeight - (value / 16) * (chartHeight - paddingBottom);
   }
 
   function xScale(index: number) {
-    return paddingLeft + (index / (data.length - 1)) * (chartWidth - paddingLeft - 10);
+    const divisor = data.length > 1 ? data.length - 1 : 1;
+    return paddingLeft + (index / divisor) * (chartWidth - paddingLeft - 10);
   }
 
-  // Build bezier path
+  // Build bezier path (only if 2+ points)
   const points = data.map((d, i) => ({ x: xScale(i), y: yScale(d.value) }));
   let pathD = `M ${points[0].x} ${points[0].y}`;
   for (let i = 1; i < points.length; i++) {
@@ -50,13 +57,25 @@ export function GlucoseChart({ data = SAMPLE_DATA, height = 155, compact = false
     pathD += ` C ${cp1x} ${points[i - 1].y} ${cp2x} ${points[i].y} ${points[i].x} ${points[i].y}`;
   }
 
+  // Build x-axis labels from actual data times
+  const xLabels = data.length <= 6
+    ? data.map((d) => d.time)
+    : data.filter((_, i) => {
+        const step = Math.max(1, Math.floor(data.length / 5));
+        return i % step === 0 || i === data.length - 1;
+      }).map((d) => d.time);
+
   return (
     <View style={styles.container}>
       {!compact && (
         <View style={styles.header}>
           <View>
-            <Text style={[styles.currentValue, { color: colors.glucose.normal }]}>7.2</Text>
-            <Text style={[styles.currentUnit, { color: themeColors.textSecondary }]}>mmol/L</Text>
+            <Text style={[styles.currentValue, { color: latestColor }]}>
+              {latestReading.unit === 'mmol'
+                ? latestReading.value.toFixed(1)
+                : Math.round(latestReading.value).toString()}
+            </Text>
+            <Text style={[styles.currentUnit, { color: themeColors.textSecondary }]}>{unitLabel}</Text>
           </View>
           <View style={styles.legend}>
             <LegendItem color={colors.glucose.low} label="Low" />
@@ -102,15 +121,17 @@ export function GlucoseChart({ data = SAMPLE_DATA, height = 155, compact = false
           </SvgText>
         ))}
 
-        {/* Bezier curve */}
-        <Path d={pathD} fill="none" stroke={themeColors.primary} strokeWidth={2} />
-
-        {/* Area fill */}
-        <Path
-          d={`${pathD} L ${points[points.length - 1].x} ${chartHeight - paddingBottom} L ${points[0].x} ${chartHeight - paddingBottom} Z`}
-          fill={themeColors.primary}
-          opacity={0.07}
-        />
+        {/* Bezier curve (only render if 2+ points) */}
+        {data.length > 1 && (
+          <>
+            <Path d={pathD} fill="none" stroke={themeColors.primary} strokeWidth={2} />
+            <Path
+              d={`${pathD} L ${points[points.length - 1].x} ${chartHeight - paddingBottom} L ${points[0].x} ${chartHeight - paddingBottom} Z`}
+              fill={themeColors.primary}
+              opacity={0.07}
+            />
+          </>
+        )}
 
         {/* Data points */}
         {data.map((d, i) => (
@@ -125,11 +146,11 @@ export function GlucoseChart({ data = SAMPLE_DATA, height = 155, compact = false
           />
         ))}
 
-        {/* X-axis labels */}
-        {X_LABELS.map((label, i) => (
+        {/* X-axis labels from actual data */}
+        {xLabels.map((label, i) => (
           <SvgText
             key={label + i}
-            x={paddingLeft + (i / (X_LABELS.length - 1)) * (chartWidth - paddingLeft - 10)}
+            x={paddingLeft + (i / Math.max(xLabels.length - 1, 1)) * (chartWidth - paddingLeft - 10)}
             y={height - 2}
             fontSize={9}
             fill={themeColors.textMuted}

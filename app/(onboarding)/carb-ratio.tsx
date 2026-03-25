@@ -1,15 +1,17 @@
 import { useState } from 'react';
-import { StyleSheet, Text, View, ScrollView } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { Button } from '@/components/ui/Button';
+import { Mascot } from '@/components/Mascot';
 import { Card } from '@/components/ui/Card';
 import { Chips } from '@/components/ui/Chips';
 import { Field } from '@/components/ui/Field';
 import { ProgressDots } from '@/components/ui/ProgressDots';
 import { DisclaimerBanner } from '@/components/DisclaimerBanner';
 import { useThemeColors } from '@/lib/theme';
-import { useOnboardingStore } from '@/lib/store';
+import { useOnboardingStore, useUserPreferencesStore } from '@/lib/store';
 import { spacing, typography, borderRadius } from '@/constants/tokens';
 import { DISCLAIMERS } from '@/constants/disclaimers';
 
@@ -23,8 +25,13 @@ const QUICK_VALUES = [
 
 export default function CarbRatioScreen() {
   const colors = useThemeColors();
-  const { carbRatio, setField, completeOnboarding } = useOnboardingStore();
+  const onboarding = useOnboardingStore();
+  const prefs = useUserPreferencesStore();
+  const { carbRatio, carbUnit, setField } = onboarding;
   const [value, setValue] = useState(String(carbRatio));
+
+  const isExchanges = carbUnit === 'exchanges';
+  const unitLabel = isExchanges ? 'exchanges per 1U' : 'g per 1U';
 
   function handleChipSelect(chipValue: string) {
     setValue(chipValue);
@@ -40,12 +47,31 @@ export default function CarbRatioScreen() {
   }
 
   function handleNext() {
-    completeOnboarding();
+    // Commit onboarding data to persisted store
+    prefs.setGlucoseUnit(onboarding.glucoseUnit);
+    prefs.setCarbUnit(onboarding.carbUnit);
+    prefs.setCarbRatio(Number(value));
+    prefs.setRanges({
+      rangeVeryHigh: onboarding.rangeVeryHigh,
+      rangeTargetHigh: onboarding.rangeTargetHigh,
+      rangeTargetLow: onboarding.rangeTargetLow,
+    });
+    if (onboarding.disclaimerAccepted) {
+      prefs.acceptDisclaimer();
+    }
+    prefs.completeOnboarding();
+
+    // Also mark session store as completed
+    onboarding.completeOnboarding();
+
     router.replace('/(tabs)');
   }
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.bg }]}>
+      <Pressable onPress={() => router.back()} style={styles.backButton}>
+        <Ionicons name="chevron-back" size={24} color={colors.text} />
+      </Pressable>
       <View style={styles.dotsWrapper}>
         <ProgressDots total={9} current={7} />
       </View>
@@ -55,7 +81,9 @@ export default function CarbRatioScreen() {
           What's your carb ratio?
         </Text>
         <Text style={[styles.helper, { color: colors.textSecondary }]}>
-          Your carb ratio tells us how many grams of carbs are covered by 1 unit of insulin.
+          {isExchanges
+            ? 'Your carb ratio tells us how many exchanges are covered by 1 unit of insulin.'
+            : 'Your carb ratio tells us how many grams of carbs are covered by 1 unit of insulin.'}
         </Text>
 
         <DisclaimerBanner variant="warning" text={DISCLAIMERS.carbRatioBanner} />
@@ -82,7 +110,7 @@ export default function CarbRatioScreen() {
               placeholder="Custom value"
               value={QUICK_VALUES.some((q) => q.value === value) ? '' : value}
               onChangeText={handleCustomInput}
-              unit="g per 1U"
+              unit={unitLabel}
               keyboardType="numeric"
             />
           </View>
@@ -98,6 +126,9 @@ export default function CarbRatioScreen() {
           Next
         </Button>
       </View>
+      <View style={styles.mascotFloat}>
+        <Mascot size={44} expression="happy" />
+      </View>
     </SafeAreaView>
   );
 }
@@ -105,6 +136,12 @@ export default function CarbRatioScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  backButton: {
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 4,
+    alignSelf: 'flex-start' as const,
   },
   dotsWrapper: {
     paddingTop: spacing.base,
@@ -154,5 +191,10 @@ const styles = StyleSheet.create({
   footer: {
     paddingHorizontal: spacing.xl,
     paddingBottom: spacing.xl,
+  },
+  mascotFloat: {
+    position: 'absolute',
+    bottom: 90,
+    left: 20,
   },
 });

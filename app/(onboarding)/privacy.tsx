@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { StyleSheet, Text, View, ScrollView } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Checkbox } from '@/components/ui/Checkbox';
@@ -17,6 +18,9 @@ export default function PrivacyScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.surface }]}>
+      <Pressable onPress={() => router.back()} style={styles.backButton}>
+        <Ionicons name="chevron-back" size={24} color={colors.text} />
+      </Pressable>
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
           <Text style={[styles.heading, { color: colors.text }]}>Privacy & Legal</Text>
@@ -58,6 +62,12 @@ export default function PrivacyScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  backButton: {
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 4,
+    alignSelf: 'flex-start' as const,
   },
   scrollContent: {
     paddingHorizontal: spacing.xl,

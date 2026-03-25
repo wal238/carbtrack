@@ -80,9 +80,26 @@ Insulin dose calculation based on carb intake.
 
 ---
 
-## Phase 6: Polish & Monetization
+## Phase 6: RevenueCat Subscriptions
 
-Final polish, cloud sync, and revenue features.
+Integrate RevenueCat SDK for in-app subscriptions and entitlement gating.
+
+- Install `react-native-purchases` and `react-native-purchases-ui`
+- RevenueCat constants (`constants/revenuecat.ts`): API keys, entitlement ID
+- Subscription Zustand store (`lib/subscription-store.ts`): SDK init, entitlement checking, restore purchases, customer info listener
+- `useProAccess` hook (`lib/hooks/useProAccess.ts`) for entitlement gating
+- Paywall modal screen (`app/paywall.tsx`) using `RevenueCatUI.presentPaywallIfNeeded()`
+- Customer Center modal screen (`app/customer-center.tsx`) using `RevenueCatUI.presentCustomerCenter()`
+- Subscription management UI in More tab: status, upgrade, manage, restore
+- `ProGate` component (`components/ProGate.tsx`) for feature gating
+- Products: Monthly, Yearly, Lifetime
+- Entitlement: `Preflightai .io Pro`
+
+---
+
+## Phase 7: Polish & Finalization
+
+Final polish, cloud sync, and remaining features.
 
 - **Supabase integration**: auth (sign-in/sign-up), PostgreSQL database, cloud sync
   - User profiles synced to Supabase on signup
@@ -90,9 +107,6 @@ Final polish, cloud sync, and revenue features.
   - Auth screens (`app/(auth)/`): sign-in, sign-up
   - AuthProvider context with conditional routing
   - RLS policies for data security
-- **RevenueCat** (`react-native-purchases`): PRO subscription management
-  - Paywall screen with feature comparison
-  - Gate premium features (PDF reports, cloud sync, advanced stats)
 - **PDF report generation**: exportable glucose/carb reports
 - **Connections screen**: Apple Health integration, device connections
 - **Push notifications** via `expo-notifications`: medication reminders, logging reminders

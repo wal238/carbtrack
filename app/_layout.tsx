@@ -1,5 +1,5 @@
 import { ThemeProvider as NavigationThemeProvider } from '@react-navigation/native';
-import { Stack } from 'expo-router';
+import { Stack, router, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
 import { useFonts } from 'expo-font';
@@ -40,6 +40,20 @@ export default function RootLayout() {
     if (fontsLoaded) SplashScreen.hideAsync();
   }, [fontsLoaded]);
 
+  const segments = useSegments();
+
+  useEffect(() => {
+    if (!fontsLoaded) return;
+
+    const inOnboarding = segments[0] === '(onboarding)';
+
+    if (!onboardingCompleted && !inOnboarding) {
+      router.replace('/(onboarding)/welcome');
+    } else if (onboardingCompleted && inOnboarding) {
+      router.replace('/(tabs)');
+    }
+  }, [onboardingCompleted, fontsLoaded, segments]);
+
   if (!fontsLoaded) return null;
 
   return (
@@ -48,6 +62,7 @@ export default function RootLayout() {
         <Stack>
           <Stack.Screen name="(onboarding)" options={{ headerShown: false }} />
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="new-entry" options={{ presentation: 'modal', headerShown: false }} />
           <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
         </Stack>
         <StatusBar style="auto" />

@@ -1,65 +1,171 @@
-import { StyleSheet, Text, View, ScrollView } from 'react-native';
+import { useState } from 'react';
+import { StyleSheet, Text, View, ScrollView, Pressable, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { Button } from '@/components/ui/Button';
+import { Mascot } from '@/components/Mascot';
 import { Card } from '@/components/ui/Card';
 import { ProgressDots } from '@/components/ui/ProgressDots';
 import { useThemeColors } from '@/lib/theme';
 import { useOnboardingStore } from '@/lib/store';
-import { spacing, typography, colors as tokenColors } from '@/constants/tokens';
+import { spacing, typography, colors as tokenColors, borderRadius } from '@/constants/tokens';
 
 export default function RangesScreen() {
   const colors = useThemeColors();
-  const { rangeVeryHigh, rangeTargetHigh, rangeTargetLow } = useOnboardingStore();
+  const { rangeTargetHigh, rangeTargetLow, setField } = useOnboardingStore();
+
+  const [highAbove, setHighAbove] = useState(String(rangeTargetHigh));
+  const [goodLow, setGoodLow] = useState(String(rangeTargetLow));
+  const [goodHigh, setGoodHigh] = useState(String(rangeTargetHigh));
+  const [lowBelow, setLowBelow] = useState(String(rangeTargetLow));
+
+  function handleHighAbove(text: string) {
+    setHighAbove(text);
+    setGoodHigh(text);
+    const num = parseFloat(text);
+    if (!isNaN(num) && num > 0) {
+      setField('rangeTargetHigh', num);
+      setField('rangeVeryHigh', num);
+    }
+  }
+
+  function handleGoodLow(text: string) {
+    setGoodLow(text);
+    setLowBelow(text);
+    const num = parseFloat(text);
+    if (!isNaN(num) && num > 0) {
+      setField('rangeTargetLow', num);
+    }
+  }
+
+  function handleGoodHigh(text: string) {
+    setGoodHigh(text);
+    setHighAbove(text);
+    const num = parseFloat(text);
+    if (!isNaN(num) && num > 0) {
+      setField('rangeTargetHigh', num);
+      setField('rangeVeryHigh', num);
+    }
+  }
+
+  function handleLowBelow(text: string) {
+    setLowBelow(text);
+    setGoodLow(text);
+    const num = parseFloat(text);
+    if (!isNaN(num) && num > 0) {
+      setField('rangeTargetLow', num);
+    }
+  }
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.bg }]}>
+      <Pressable onPress={() => router.back()} style={styles.backButton}>
+        <Ionicons name="chevron-back" size={24} color={colors.text} />
+      </Pressable>
       <View style={styles.dotsWrapper}>
         <ProgressDots total={9} current={5} />
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <Text style={[styles.heading, { color: colors.text }]}>
-          What are your ranges?
+          What are your target ranges?
         </Text>
         <Text style={[styles.subtext, { color: colors.textSecondary }]}>
-          These define how graphs classify your values.
+          These define how your readings are classified on graphs and reports.
         </Text>
 
         <Card>
           <View style={styles.rangeRows}>
-            <View style={styles.rangeRow}>
-              <View style={[styles.dot, { backgroundColor: tokenColors.glucose.warning }]} />
-              <Text style={[styles.rangeLabel, { color: colors.text }]}>Very high</Text>
-              <Text style={[styles.rangeValue, { color: colors.textSecondary }]}>
-                {rangeVeryHigh} mmol/L
-              </Text>
+            {/* High */}
+            <View style={styles.rangeSection}>
+              <View style={styles.rangeLabelRow}>
+                <View style={[styles.dot, { backgroundColor: tokenColors.glucose.high }]} />
+                <Text style={[styles.rangeLabel, { color: colors.text }]}>High</Text>
+              </View>
+              <View style={styles.rangeDescription}>
+                <Text style={[styles.rangeDescText, { color: colors.textSecondary }]}>
+                  Above
+                </Text>
+                <View style={styles.inputWrapper}>
+                  <TextInput
+                    style={[styles.rangeInput, { color: colors.text, borderColor: colors.border }]}
+                    value={highAbove}
+                    onChangeText={handleHighAbove}
+                    keyboardType="decimal-pad"
+                    selectTextOnFocus
+                  />
+                  <Text style={[styles.unitText, { color: colors.textMuted }]}>mmol/L</Text>
+                </View>
+              </View>
             </View>
 
             <View style={[styles.divider, { backgroundColor: colors.borderFaint }]} />
 
-            <View style={styles.rangeRow}>
-              <View style={[styles.dot, { backgroundColor: tokenColors.glucose.normal }]} />
-              <Text style={[styles.rangeLabel, { color: colors.text }]}>Target range</Text>
-              <Text style={[styles.rangeValue, { color: colors.textSecondary }]}>
-                {rangeTargetLow} – {rangeTargetHigh} mmol/L
-              </Text>
+            {/* Good (target range) */}
+            <View style={styles.rangeSection}>
+              <View style={styles.rangeLabelRow}>
+                <View style={[styles.dot, { backgroundColor: tokenColors.glucose.normal }]} />
+                <Text style={[styles.rangeLabel, { color: colors.text }]}>Good</Text>
+              </View>
+              <View style={styles.rangeDescription}>
+                <Text style={[styles.rangeDescText, { color: colors.textSecondary }]}>
+                  Between
+                </Text>
+                <View style={styles.inputWrapper}>
+                  <TextInput
+                    style={[styles.rangeInput, { color: colors.text, borderColor: colors.border }]}
+                    value={goodLow}
+                    onChangeText={handleGoodLow}
+                    keyboardType="decimal-pad"
+                    selectTextOnFocus
+                  />
+                </View>
+                <Text style={[styles.rangeDescText, { color: colors.textSecondary }]}>
+                  and
+                </Text>
+                <View style={styles.inputWrapper}>
+                  <TextInput
+                    style={[styles.rangeInput, { color: colors.text, borderColor: colors.border }]}
+                    value={goodHigh}
+                    onChangeText={handleGoodHigh}
+                    keyboardType="decimal-pad"
+                    selectTextOnFocus
+                  />
+                </View>
+                <Text style={[styles.unitText, { color: colors.textMuted }]}>mmol/L</Text>
+              </View>
             </View>
 
             <View style={[styles.divider, { backgroundColor: colors.borderFaint }]} />
 
-            <View style={styles.rangeRow}>
-              <View style={[styles.dot, { backgroundColor: tokenColors.glucose.high }]} />
-              <Text style={[styles.rangeLabel, { color: colors.text }]}>Very low</Text>
-              <Text style={[styles.rangeValue, { color: colors.textSecondary }]}>
-                3.0 mmol/L
-              </Text>
+            {/* Low */}
+            <View style={styles.rangeSection}>
+              <View style={styles.rangeLabelRow}>
+                <View style={[styles.dot, { backgroundColor: tokenColors.glucose.low }]} />
+                <Text style={[styles.rangeLabel, { color: colors.text }]}>Low</Text>
+              </View>
+              <View style={styles.rangeDescription}>
+                <Text style={[styles.rangeDescText, { color: colors.textSecondary }]}>
+                  Below
+                </Text>
+                <View style={styles.inputWrapper}>
+                  <TextInput
+                    style={[styles.rangeInput, { color: colors.text, borderColor: colors.border }]}
+                    value={lowBelow}
+                    onChangeText={handleLowBelow}
+                    keyboardType="decimal-pad"
+                    selectTextOnFocus
+                  />
+                  <Text style={[styles.unitText, { color: colors.textMuted }]}>mmol/L</Text>
+                </View>
+              </View>
             </View>
           </View>
         </Card>
 
         <Text style={[styles.footnote, { color: colors.textMuted }]}>
-          Very low cannot be changed for medical reasons.
+          Defaults: Good range is 3.9 – 10.0 mmol/L. You can adjust these to match your doctor's advice.
         </Text>
       </ScrollView>
 
@@ -68,6 +174,9 @@ export default function RangesScreen() {
           Next
         </Button>
       </View>
+      <View style={styles.mascotFloat}>
+        <Mascot size={44} expression="neutral" />
+      </View>
     </SafeAreaView>
   );
 }
@@ -75,6 +184,12 @@ export default function RangesScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  backButton: {
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 4,
+    alignSelf: 'flex-start' as const,
   },
   dotsWrapper: {
     paddingTop: spacing.base,
@@ -98,10 +213,13 @@ const styles = StyleSheet.create({
   rangeRows: {
     gap: spacing.base,
   },
-  rangeRow: {
+  rangeSection: {
+    gap: spacing.sm,
+  },
+  rangeLabelRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.md,
+    gap: spacing.sm,
   },
   dot: {
     width: 10,
@@ -109,14 +227,38 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   rangeLabel: {
-    flex: 1,
     fontFamily: typography.fontFamily.bodySemiBold,
     fontSize: typography.fontSize.body,
     fontWeight: typography.fontWeight.bodySemiBold,
   },
-  rangeValue: {
+  rangeDescription: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    paddingLeft: 18,
+  },
+  rangeDescText: {
+    fontFamily: typography.fontFamily.body,
+    fontSize: typography.fontSize.caption,
+  },
+  inputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  rangeInput: {
     fontFamily: typography.fontFamily.body,
     fontSize: typography.fontSize.body,
+    borderWidth: 1.5,
+    borderRadius: borderRadius.xs,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    width: 60,
+    textAlign: 'center',
+  },
+  unitText: {
+    fontFamily: typography.fontFamily.caption,
+    fontSize: typography.fontSize.caption,
   },
   divider: {
     height: 1,
@@ -129,5 +271,10 @@ const styles = StyleSheet.create({
   footer: {
     paddingHorizontal: spacing.xl,
     paddingBottom: spacing.xl,
+  },
+  mascotFloat: {
+    position: 'absolute',
+    bottom: 90,
+    left: 20,
   },
 });

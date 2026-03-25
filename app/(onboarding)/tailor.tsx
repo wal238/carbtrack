@@ -1,6 +1,7 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { Mascot } from '@/components/Mascot';
 import { Button } from '@/components/ui/Button';
 import { useThemeColors } from '@/lib/theme';
@@ -11,6 +12,9 @@ export default function TailorScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.primaryMuted }]}>
+      <Pressable onPress={() => router.back()} style={styles.backButton}>
+        <Ionicons name="chevron-back" size={24} color={colors.text} />
+      </Pressable>
       <View style={styles.content}>
         <Mascot size={90} expression="wink" glow />
         <Text style={[styles.heading, { color: colors.text }]}>
@@ -33,6 +37,12 @@ export default function TailorScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  backButton: {
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 4,
+    alignSelf: 'flex-start' as const,
   },
   content: {
     flex: 1,

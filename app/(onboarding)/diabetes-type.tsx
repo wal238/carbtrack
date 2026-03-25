@@ -1,8 +1,10 @@
 import { useState } from 'react';
-import { StyleSheet, Text, View, ScrollView } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { Button } from '@/components/ui/Button';
+import { Mascot } from '@/components/Mascot';
 import { RadioCard } from '@/components/ui/RadioCard';
 import { ProgressDots } from '@/components/ui/ProgressDots';
 import { useThemeColors } from '@/lib/theme';
@@ -31,6 +33,9 @@ export default function DiabetesTypeScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.bg }]}>
+      <Pressable onPress={() => router.back()} style={styles.backButton}>
+        <Ionicons name="chevron-back" size={24} color={colors.text} />
+      </Pressable>
       <View style={styles.dotsWrapper}>
         <ProgressDots total={9} current={0} />
       </View>
@@ -61,6 +66,9 @@ export default function DiabetesTypeScreen() {
           Next
         </Button>
       </View>
+      <View style={styles.mascotFloat}>
+        <Mascot size={44} expression="happy" />
+      </View>
     </SafeAreaView>
   );
 }
@@ -68,6 +76,12 @@ export default function DiabetesTypeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  backButton: {
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 4,
+    alignSelf: 'flex-start' as const,
   },
   dotsWrapper: {
     paddingTop: spacing.base,
@@ -89,5 +103,10 @@ const styles = StyleSheet.create({
   footer: {
     paddingHorizontal: spacing.xl,
     paddingBottom: spacing.xl,
+  },
+  mascotFloat: {
+    position: 'absolute',
+    bottom: 90,
+    left: 20,
   },
 });

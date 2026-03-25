@@ -1,7 +1,9 @@
-import { StyleSheet, Text, View, ScrollView } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { Button } from '@/components/ui/Button';
+import { Mascot } from '@/components/Mascot';
 import { Card } from '@/components/ui/Card';
 import { TogglePill } from '@/components/ui/TogglePill';
 import { SectionLabel } from '@/components/ui/SectionLabel';
@@ -30,6 +32,9 @@ export default function UnitsScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.bg }]}>
+      <Pressable onPress={() => router.back()} style={styles.backButton}>
+        <Ionicons name="chevron-back" size={24} color={colors.text} />
+      </Pressable>
       <View style={styles.dotsWrapper}>
         <ProgressDots total={9} current={4} />
       </View>
@@ -72,6 +77,9 @@ export default function UnitsScreen() {
           Next
         </Button>
       </View>
+      <View style={styles.mascotFloat}>
+        <Mascot size={44} expression="wink" />
+      </View>
     </SafeAreaView>
   );
 }
@@ -79,6 +87,12 @@ export default function UnitsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  backButton: {
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 4,
+    alignSelf: 'flex-start' as const,
   },
   dotsWrapper: {
     paddingTop: spacing.base,
@@ -111,5 +125,10 @@ const styles = StyleSheet.create({
   footer: {
     paddingHorizontal: spacing.xl,
     paddingBottom: spacing.xl,
+  },
+  mascotFloat: {
+    position: 'absolute',
+    bottom: 90,
+    left: 20,
   },
 });

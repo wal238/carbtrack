@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { StyleSheet, Text, View, ScrollView } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Button } from '@/components/ui/Button';
+import { Mascot } from '@/components/Mascot';
 import { Card } from '@/components/ui/Card';
 import { Checkbox } from '@/components/ui/Checkbox';
 import { ProgressDots } from '@/components/ui/ProgressDots';
@@ -26,6 +27,9 @@ export default function DisclaimerScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.bg }]}>
+      <Pressable onPress={() => router.back()} style={styles.backButton}>
+        <Ionicons name="chevron-back" size={24} color={colors.text} />
+      </Pressable>
       <View style={styles.dotsWrapper}>
         <ProgressDots total={9} current={6} />
       </View>
@@ -72,6 +76,9 @@ export default function DisclaimerScreen() {
           I Understand
         </Button>
       </View>
+      <View style={styles.mascotFloat}>
+        <Mascot size={44} expression="neutral" />
+      </View>
     </SafeAreaView>
   );
 }
@@ -79,6 +86,12 @@ export default function DisclaimerScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  backButton: {
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 4,
+    alignSelf: 'flex-start' as const,
   },
   dotsWrapper: {
     paddingTop: spacing.base,
@@ -122,5 +135,10 @@ const styles = StyleSheet.create({
   footer: {
     paddingHorizontal: spacing.xl,
     paddingBottom: spacing.xl,
+  },
+  mascotFloat: {
+    position: 'absolute',
+    bottom: 90,
+    left: 20,
   },
 });
