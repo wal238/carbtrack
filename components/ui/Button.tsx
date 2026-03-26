@@ -93,7 +93,7 @@ function getVariantStyles(
 
   switch (variant) {
     case 'primary':
-      return { ...base, bg: colors.primary, text: '#0F2027' };
+      return { ...base, bg: colors.primary, text: colors.onPrimary };
     case 'secondary':
       return { ...base, bg: colors.secondaryMuted, text: colors.secondary };
     case 'surface':
@@ -103,11 +103,11 @@ function getVariantStyles(
     case 'ghost':
       return { ...base, bg: 'transparent', text: colors.primary };
     case 'accent':
-      return { ...base, bg: colors.warning, text: '#0F2027' };
+      return { ...base, bg: colors.warning, text: colors.onWarning };
     case 'dkSurface':
       return { ...base, bg: isDark ? colors.surface : colors.bg, text: colors.text };
     default:
-      return { ...base, bg: colors.primary, text: '#0F2027' };
+      return { ...base, bg: colors.primary, text: colors.onPrimary };
   }
 }
 

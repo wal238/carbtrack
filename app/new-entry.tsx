@@ -296,7 +296,7 @@ export default function NewEntryScreen() {
                         { backgroundColor: colors.primary },
                       ]}
                     >
-                      <Text style={styles.addButtonText}>+</Text>
+                      <Text style={[styles.addButtonText, { color: colors.onPrimary }]}>+</Text>
                     </Pressable>
                   </View>
 
@@ -432,7 +432,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   addButtonText: {
-    color: '#0F2027',
     fontSize: typography.fontSize.heading,
     fontWeight: '700',
   },

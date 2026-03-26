@@ -67,16 +67,21 @@ Camera-based food recognition for quick carb logging.
 
 ---
 
-## Phase 5: Insulin Calculator
+## Phase 5: Insulin Calculator (COMPLETE)
 
-Insulin dose calculation based on carb intake.
+Insulin dose calculation with ruler-style carb input.
 
-- Calculator screen: input carbs, display recommended insulin dose
-- Formula: `dose = carbs / carbRatio` (ratio from user preferences)
-- Support for correction doses based on current glucose vs target
-- Log calculated doses to insulin_logs store
-- Calculator disclaimer banner and footer per PRD requirements
-- History of recent calculations
+- New "Calculator" tab added to bottom navigation (between Reports and Connect)
+- RulerPicker component (`components/ui/RulerPicker.tsx`): horizontal scroll ruler for carb input (0–300g)
+- Calculator screen (`app/(tabs)/calculator.tsx`):
+  - Ruler-style carb input with snap-to-tick scrolling
+  - Optional current glucose input for correction doses
+  - Real-time dose calculation: `dose = carbs / carbRatio`
+  - Correction dose support: based on current glucose vs target range
+  - Result card with dose breakdown (food dose + correction dose)
+  - "Log Dose" button saves to insulin log store
+  - Disclaimer banner and footer per PRD requirements
+- Recent calculations shown on calculator screen from insulin log history
 
 ---
 

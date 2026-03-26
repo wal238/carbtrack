@@ -43,7 +43,7 @@ export function TogglePill({ options, selected, onSelect }: TogglePillProps) {
             style={[
               styles.label,
               {
-                color: index === selected ? '#0F2027' : colors.textSecondary,
+                color: index === selected ? colors.onPrimary : colors.textSecondary,
                 fontWeight: index === selected ? '700' : '500',
               },
             ]}

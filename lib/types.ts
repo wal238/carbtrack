@@ -207,6 +207,11 @@ export interface GlucoseDataPoint {
   unit: GlucoseUnit;
 }
 
+export interface InsulinDoseMarker {
+  time: string;
+  dose: number;
+}
+
 export interface CarbDay {
   day: string;
   breakfast: number;

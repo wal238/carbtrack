@@ -21,6 +21,14 @@ export const colors = {
     lowMuted: '#EFF6FF',
   },
 
+  // Semantic "on" text colors for colored backgrounds
+  onPrimary: '#0F2027',
+  onSecondary: '#FFFFFF',
+  onWarning: '#5C4813',
+  onHigh: '#FFFFFF',
+  onNormal: '#FFFFFF',
+  onLow: '#FFFFFF',
+
   // Light Mode Surfaces
   light: {
     bg: '#F5F7FA',
@@ -29,7 +37,7 @@ export const colors = {
     borderFaint: '#EEF1F5',
     text: '#0F2027',
     textSecondary: '#5A6B78',
-    textMuted: '#94A3B0',
+    textMuted: '#6B7C89',
   },
 
   // Dark Mode Surfaces
@@ -47,7 +55,7 @@ export const colors = {
   meals: {
     breakfast: '#2EC4B6',
     lunch: '#4C7DFF',
-    dinner: '#FACC15',
+    dinner: '#F59E0B',
     snack: '#A78BFA',
   },
 } as const;

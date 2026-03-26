@@ -13,7 +13,7 @@ import { spacing, typography } from '@/constants/tokens';
 
 const METER_OPTIONS = [
   { label: 'Accu-Chek Aviva Connect', value: 'accu-chek-aviva' },
-  { label: 'Accu-Chek Guide', sublabel: 'Order for free', value: 'accu-chek-guide' },
+  { label: 'Accu-Chek Guide', value: 'accu-chek-guide' },
   { label: 'FreeStyle Libre', value: 'freestyle-libre' },
   { label: 'Other device', value: 'other' },
 ];

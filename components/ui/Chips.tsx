@@ -30,7 +30,7 @@ export function Chips({ options, selected, onSelect }: ChipsProps) {
             <Text
               style={[
                 styles.label,
-                { color: isSelected ? '#0F2027' : colors.text },
+                { color: isSelected ? colors.onPrimary : colors.text },
               ]}
             >
               {option.label}

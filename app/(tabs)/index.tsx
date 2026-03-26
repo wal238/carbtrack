@@ -12,7 +12,7 @@ import { SectionLabel } from '@/components/ui/SectionLabel';
 import { useGlucoseLogStore, useMealLogStore, useInsulinLogStore } from '@/lib/data-store';
 import { useUserPreferencesStore } from '@/lib/store';
 import { MEAL_TYPES, DOSE_TYPES } from '@/lib/types';
-import type { GlucoseDataPoint, MealType, DoseType } from '@/lib/types';
+import type { GlucoseDataPoint, InsulinDoseMarker, MealType, DoseType } from '@/lib/types';
 
 function formatTimeAgo(isoString: string): string {
   const now = Date.now();
@@ -66,6 +66,15 @@ export default function TrendScreen() {
           unit: l.unit,
         })),
     [todayGlucoseLogs],
+  );
+
+  const insulinMarkers = useMemo<InsulinDoseMarker[]>(
+    () =>
+      insulinLogs
+        .filter((l) => l.logged_at.startsWith(today))
+        .sort((a, b) => a.logged_at.localeCompare(b.logged_at))
+        .map((l) => ({ time: formatHour(l.logged_at), dose: l.dose })),
+    [insulinLogs, today],
   );
 
   // Today's meals
@@ -197,7 +206,7 @@ export default function TrendScreen() {
               style={[styles.headerBtn, { backgroundColor: themeColors.primary }]}
               onPress={() => router.push('/new-entry')}
             >
-              <Ionicons name="add" size={22} color="#0F2027" />
+              <Ionicons name="add" size={22} color={themeColors.onPrimary} />
             </Pressable>
             <Pressable
               style={[
@@ -213,7 +222,7 @@ export default function TrendScreen() {
         {/* Glucose Chart */}
         <Card>
           {glucoseChartData.length > 0 ? (
-            <GlucoseChart data={glucoseChartData} compact />
+            <GlucoseChart data={glucoseChartData} insulinDoses={insulinMarkers} compact />
           ) : (
             <View style={styles.emptyState}>
               <Mascot size={48} expression="neutral" />
@@ -227,7 +236,7 @@ export default function TrendScreen() {
         {/* Carbs Today */}
         <Card>
           <View style={styles.carbRow}>
-            <Ionicons name="flame" size={20} color={themeColors.warning} />
+            <Ionicons name="flame" size={20} color={themeColors.dinner} />
             <Text style={[styles.carbLabel, { color: themeColors.textSecondary }]}>Carbs today</Text>
           </View>
           <View style={[styles.progressBg, { backgroundColor: themeColors.bg }]}>
@@ -300,7 +309,7 @@ export default function TrendScreen() {
           <View style={styles.a1cRow}>
             <View>
               <Text style={[styles.a1cLabel, { color: themeColors.textSecondary }]}>Estimated A1c</Text>
-              <Text style={[styles.a1cValue, { color: themeColors.normal }]}>
+              <Text style={[styles.a1cValue, { color: themeColors.primaryDark }]}>
                 {estimatedA1c != null ? `${estimatedA1c}%` : '\u2014'}
               </Text>
             </View>
@@ -329,9 +338,9 @@ export default function TrendScreen() {
                     size={18}
                     color={
                       entry.type === 'glucose'
-                        ? themeColors.normal
+                        ? themeColors.primaryDark
                         : entry.type === 'meal'
-                          ? themeColors.warning
+                          ? themeColors.dinner
                           : themeColors.secondary
                     }
                   />

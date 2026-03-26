@@ -20,6 +20,13 @@ function buildLightColors() {
     primarySoft: colors.primarySoft,
     secondary: colors.secondary,
     secondaryMuted: colors.secondaryMuted,
+    // Semantic "on" text colors for colored backgrounds
+    onPrimary: colors.onPrimary,
+    onSecondary: colors.onSecondary,
+    onWarning: colors.onWarning,
+    onHigh: colors.onHigh,
+    onNormal: colors.onNormal,
+    onLow: colors.onLow,
     // Glucose colors are the same in both modes
     ...colors.glucose,
     // Meal colors
@@ -42,6 +49,13 @@ function buildDarkColors() {
     primarySoft: '#2EC4B610',
     secondary: colors.secondary,
     secondaryMuted: '#4C7DFF20',
+    // Semantic "on" text colors for colored backgrounds
+    onPrimary: colors.onPrimary,
+    onSecondary: colors.onSecondary,
+    onWarning: colors.onWarning,
+    onHigh: colors.onHigh,
+    onNormal: colors.onNormal,
+    onLow: colors.onLow,
     ...colors.glucose,
     ...colors.meals,
   };

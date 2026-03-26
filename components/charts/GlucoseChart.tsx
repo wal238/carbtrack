@@ -1,12 +1,14 @@
+import React from 'react';
 import { StyleSheet, View, Text } from 'react-native';
 import Svg, { Rect, Line, Circle, Path, Text as SvgText } from 'react-native-svg';
 import { spacing, typography, colors } from '@/constants/tokens';
 import { useThemeColors } from '@/lib/theme';
 import { getGlucoseColor } from '@/lib/colors';
-import type { GlucoseDataPoint } from '@/lib/types';
+import type { GlucoseDataPoint, InsulinDoseMarker } from '@/lib/types';
 
 interface GlucoseChartProps {
   data?: GlucoseDataPoint[];
+  insulinDoses?: InsulinDoseMarker[];
   height?: number;
   compact?: boolean;
 }
@@ -25,7 +27,7 @@ const SAMPLE_DATA: GlucoseDataPoint[] = [
 
 const Y_LABELS = [0, 3.9, 10, 16];
 
-export function GlucoseChart({ data = SAMPLE_DATA, height = 155, compact = false }: GlucoseChartProps) {
+export function GlucoseChart({ data = SAMPLE_DATA, insulinDoses = [], height = 155, compact = false }: GlucoseChartProps) {
   const themeColors = useThemeColors();
   const chartWidth = 300;
   const chartHeight = height - 30;
@@ -78,10 +80,13 @@ export function GlucoseChart({ data = SAMPLE_DATA, height = 155, compact = false
             <Text style={[styles.currentUnit, { color: themeColors.textSecondary }]}>{unitLabel}</Text>
           </View>
           <View style={styles.legend}>
-            <LegendItem color={colors.glucose.low} label="Low" />
-            <LegendItem color={colors.glucose.normal} label="Normal" />
-            <LegendItem color={colors.glucose.warning} label="Warning" />
-            <LegendItem color={colors.glucose.high} label="High" />
+            <LegendItem color={colors.glucose.low} label="Low" textColor={themeColors.textSecondary} />
+            <LegendItem color={colors.glucose.normal} label="Normal" textColor={themeColors.textSecondary} />
+            <LegendItem color={colors.glucose.warning} label="Warning" textColor={themeColors.textSecondary} />
+            <LegendItem color={colors.glucose.high} label="High" textColor={themeColors.textSecondary} />
+            {insulinDoses.length > 0 && (
+              <LegendItem color={colors.secondary} label="Insulin" textColor={themeColors.textSecondary} />
+            )}
           </View>
         </View>
       )}
@@ -133,6 +138,52 @@ export function GlucoseChart({ data = SAMPLE_DATA, height = 155, compact = false
           </>
         )}
 
+        {/* Insulin dose markers */}
+        {insulinDoses.map((dose, i) => {
+          // Find matching glucose data point by time, or distribute evenly
+          const matchIndex = data.findIndex((d) => d.time === dose.time);
+          let x: number;
+          if (matchIndex >= 0) {
+            x = xScale(matchIndex);
+          } else {
+            // Place proportionally across chart
+            const divisor = Math.max(insulinDoses.length - 1, 1);
+            x = paddingLeft + (i / divisor) * (chartWidth - paddingLeft - 10);
+          }
+          const markerY = 8;
+          const lineBottom = chartHeight - paddingBottom;
+
+          return (
+            <React.Fragment key={`insulin-${i}`}>
+              {/* Dashed drop line */}
+              <Line
+                x1={x} y1={markerY + 8}
+                x2={x} y2={lineBottom}
+                stroke={colors.secondary}
+                strokeWidth={1}
+                strokeDasharray="3 3"
+                opacity={0.4}
+              />
+              {/* Triangle marker */}
+              <Path
+                d={`M ${x - 5} ${markerY} L ${x + 5} ${markerY} L ${x} ${markerY + 8} Z`}
+                fill={colors.secondary}
+              />
+              {/* Dose label */}
+              <SvgText
+                x={x}
+                y={markerY - 2}
+                fontSize={8}
+                fill={colors.secondary}
+                textAnchor="middle"
+                fontWeight="700"
+              >
+                {dose.dose}U
+              </SvgText>
+            </React.Fragment>
+          );
+        })}
+
         {/* Data points */}
         {data.map((d, i) => (
           <Circle
@@ -164,11 +215,11 @@ export function GlucoseChart({ data = SAMPLE_DATA, height = 155, compact = false
   );
 }
 
-function LegendItem({ color, label }: { color: string; label: string }) {
+function LegendItem({ color, label, textColor }: { color: string; label: string; textColor: string }) {
   return (
     <View style={styles.legendItem}>
       <View style={[styles.legendDot, { backgroundColor: color }]} />
-      <Text style={[styles.legendText, { color }]}>{label}</Text>
+      <Text style={[styles.legendText, { color: textColor }]}>{label}</Text>
     </View>
   );
 }
