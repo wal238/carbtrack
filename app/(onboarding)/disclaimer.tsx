@@ -11,13 +11,15 @@ import { ProgressDots } from '@/components/ui/ProgressDots';
 import { DisclaimerBanner } from '@/components/DisclaimerBanner';
 import { useThemeColors } from '@/lib/theme';
 import { useOnboardingStore } from '@/lib/store';
+import { getOnboardingProgress, nextAfterDisclaimer } from '@/lib/onboarding-flow';
 import { spacing, typography, colors as tokenColors } from '@/constants/tokens';
 import { DISCLAIMERS } from '@/constants/disclaimers';
 
 export default function DisclaimerScreen() {
   const colors = useThemeColors();
-  const setField = useOnboardingStore((s) => s.setField);
-  const [accepted, setAccepted] = useState(false);
+  const { insulinTherapy, disclaimerAccepted, setField } = useOnboardingStore();
+  const [accepted, setAccepted] = useState(disclaimerAccepted);
+  const progress = getOnboardingProgress('disclaimer', insulinTherapy);
 
   function handleToggle() {
     const next = !accepted;
@@ -27,11 +29,11 @@ export default function DisclaimerScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.bg }]}>
-      <Pressable onPress={() => router.back()} style={styles.backButton}>
+      <Pressable onPress={() => router.back()} style={styles.backButton} hitSlop={12} accessibilityRole="button" accessibilityLabel="Go back">
         <Ionicons name="chevron-back" size={24} color={colors.text} />
       </Pressable>
       <View style={styles.dotsWrapper}>
-        <ProgressDots total={9} current={6} />
+        <ProgressDots total={progress.total} current={progress.current} />
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -71,13 +73,13 @@ export default function DisclaimerScreen() {
         <Button
           fullWidth
           disabled={!accepted}
-          onPress={() => router.push('/(onboarding)/carb-ratio')}
+          onPress={() => router.push(nextAfterDisclaimer(insulinTherapy))}
         >
           I Understand
         </Button>
       </View>
       <View style={styles.mascotFloat}>
-        <Mascot size={44} expression="neutral" />
+        <Mascot animate size={60} expression="lookUp" />
       </View>
     </SafeAreaView>
   );

@@ -9,6 +9,7 @@ import { RadioCard } from '@/components/ui/RadioCard';
 import { ProgressDots } from '@/components/ui/ProgressDots';
 import { useThemeColors } from '@/lib/theme';
 import { useOnboardingStore } from '@/lib/store';
+import { getOnboardingProgress } from '@/lib/onboarding-flow';
 import { spacing, typography } from '@/constants/tokens';
 
 const METER_OPTIONS = [
@@ -20,8 +21,9 @@ const METER_OPTIONS = [
 
 export default function MeterScreen() {
   const colors = useThemeColors();
-  const setField = useOnboardingStore((s) => s.setField);
-  const [selected, setSelected] = useState<string | null>(null);
+  const { insulinTherapy, meter, setField } = useOnboardingStore();
+  const [selected, setSelected] = useState<string | null>(meter);
+  const progress = getOnboardingProgress('meter', insulinTherapy);
 
   function handleSelect(value: string) {
     setSelected(value);
@@ -30,11 +32,11 @@ export default function MeterScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.bg }]}>
-      <Pressable onPress={() => router.back()} style={styles.backButton}>
+      <Pressable onPress={() => router.back()} style={styles.backButton} hitSlop={12} accessibilityRole="button" accessibilityLabel="Go back">
         <Ionicons name="chevron-back" size={24} color={colors.text} />
       </Pressable>
       <View style={styles.dotsWrapper}>
-        <ProgressDots total={9} current={3} />
+        <ProgressDots total={progress.total} current={progress.current} />
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -65,7 +67,7 @@ export default function MeterScreen() {
         </Button>
       </View>
       <View style={styles.mascotFloat}>
-        <Mascot size={44} expression="happy" />
+        <Mascot animate size={60} expression="lookUp" />
       </View>
     </SafeAreaView>
   );

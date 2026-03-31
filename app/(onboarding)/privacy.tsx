@@ -16,9 +16,17 @@ export default function PrivacyScreen() {
 
   const allAccepted = termsAccepted && privacyAccepted;
 
+  function openTerms() {
+    router.push('/(onboarding)/terms');
+  }
+
+  function openPrivacyNotice() {
+    router.push('/(onboarding)/privacy-notice');
+  }
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.surface }]}>
-      <Pressable onPress={() => router.back()} style={styles.backButton}>
+      <Pressable onPress={() => router.back()} style={styles.backButton} hitSlop={12} accessibilityRole="button" accessibilityLabel="Go back">
         <Ionicons name="chevron-back" size={24} color={colors.text} />
       </Pressable>
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -44,6 +52,24 @@ export default function PrivacyScreen() {
             />
           </View>
         </Card>
+
+        <View style={styles.linksSection}>
+          <Text style={[styles.linksLabel, { color: colors.textSecondary }]}>
+            Read documents before accepting
+          </Text>
+          <Pressable onPress={openTerms} hitSlop={12} style={styles.linkRow}>
+            <Text style={[styles.linkText, { color: colors.primary }]}>
+              View Terms & Conditions
+            </Text>
+            <Ionicons name="chevron-forward" size={16} color={colors.primary} />
+          </Pressable>
+          <Pressable onPress={openPrivacyNotice} hitSlop={12} style={styles.linkRow}>
+            <Text style={[styles.linkText, { color: colors.primary }]}>
+              View Privacy Notice
+            </Text>
+            <Ionicons name="chevron-forward" size={16} color={colors.primary} />
+          </Pressable>
+        </View>
       </ScrollView>
 
       <View style={styles.footer}>
@@ -92,6 +118,23 @@ const styles = StyleSheet.create({
   },
   divider: {
     height: 1,
+  },
+  linksSection: {
+    gap: spacing.sm,
+    marginTop: -spacing.sm,
+  },
+  linksLabel: {
+    fontFamily: typography.fontFamily.caption,
+    fontSize: typography.fontSize.caption,
+  },
+  linkRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  linkText: {
+    fontFamily: typography.fontFamily.bodySemiBold,
+    fontSize: typography.fontSize.body,
   },
   footer: {
     paddingHorizontal: spacing.xl,

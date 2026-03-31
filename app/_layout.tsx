@@ -13,7 +13,7 @@ import {
 import { useEffect } from 'react';
 import 'react-native-reanimated';
 
-import { ThemeContext, useThemeProvider } from '@/lib/theme';
+import { useThemeProvider } from '@/lib/theme';
 import { useUserPreferencesStore } from '@/lib/store';
 
 SplashScreen.preventAutoHideAsync();
@@ -61,8 +61,8 @@ export default function RootLayout() {
       <NavigationThemeProvider value={navigationTheme}>
         <Stack>
           <Stack.Screen name="(onboarding)" options={{ headerShown: false }} />
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="new-entry" options={{ presentation: 'modal', headerShown: false }} />
+          <Stack.Screen name="(tabs)" options={{ headerShown: false, animation: 'fade' }} />
+          <Stack.Screen name="new-entry" options={{ presentation: 'modal', headerShown: false, animation: 'slide_from_bottom' }} />
           <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
         </Stack>
         <StatusBar style="auto" />

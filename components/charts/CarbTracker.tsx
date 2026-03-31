@@ -1,9 +1,20 @@
 import { StyleSheet, View, Text, Pressable } from 'react-native';
 import Svg, { Rect, Line } from 'react-native-svg';
-import { useState } from 'react';
-import { spacing, typography, colors, borderRadius } from '@/constants/tokens';
+import { useState, useEffect } from 'react';
+import Animated, {
+  FadeIn,
+  useAnimatedProps,
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  type SharedValue,
+} from 'react-native-reanimated';
+import { spacing, typography, colors } from '@/constants/tokens';
 import { useThemeColors } from '@/lib/theme';
+import { haptic } from '@/lib/haptics';
 import type { CarbDay } from '@/lib/types';
+
+const AnimatedRect = Animated.createAnimatedComponent(Rect);
 
 interface CarbTrackerProps {
   days?: CarbDay[];
@@ -28,9 +39,53 @@ const MEAL_COLORS = {
   snack: colors.meals.snack,
 };
 
+function AnimatedBarSegment({
+  x,
+  width,
+  finalY,
+  finalHeight,
+  color,
+  selected,
+  progress,
+  delay,
+  onPress,
+}: {
+  x: number;
+  width: number;
+  finalY: number;
+  finalHeight: number;
+  color: string;
+  selected: boolean;
+  progress: SharedValue<number>;
+  delay: number;
+  onPress: () => void;
+}) {
+  const animatedProps = useAnimatedProps(() => {
+    const localProgress = Math.max(0, Math.min(1, (progress.value - delay) / 0.32));
+    const height = finalHeight * localProgress;
+    return {
+      y: finalY + (finalHeight - height),
+      height,
+      opacity: (selected ? 1 : 0.5) * (0.35 + localProgress * 0.65),
+    };
+  });
+
+  return (
+    <AnimatedRect
+      x={x}
+      width={width}
+      rx={3}
+      fill={color}
+      animatedProps={animatedProps}
+      onPress={onPress}
+    />
+  );
+}
+
 export function CarbTracker({ days = SAMPLE_DAYS, target = 200, compact = false }: CarbTrackerProps) {
   const themeColors = useThemeColors();
   const [selectedDay, setSelectedDay] = useState(6); // Sunday
+  const chartProgress = useSharedValue(0);
 
   const todayTotal = days[selectedDay]
     ? days[selectedDay].breakfast + days[selectedDay].lunch + days[selectedDay].dinner + days[selectedDay].snack
@@ -44,6 +99,28 @@ export function CarbTracker({ days = SAMPLE_DAYS, target = 200, compact = false 
 
   const progressPercent = Math.min(todayTotal / target, 1);
   const isOverTarget = todayTotal > target;
+
+  const topProgressWidth = useSharedValue(0);
+
+  useEffect(() => {
+    topProgressWidth.value = 0;
+    topProgressWidth.value = withTiming(progressPercent * 100, { duration: 600 });
+  }, [progressPercent, topProgressWidth]);
+
+  useEffect(() => {
+    chartProgress.value = 0;
+    chartProgress.value = withTiming(1, { duration: 850 });
+  }, [days, chartProgress]);
+
+  const topProgressStyle = useAnimatedStyle(() => ({
+    width: `${topProgressWidth.value}%`,
+    backgroundColor: isOverTarget ? colors.glucose.high : themeColors.primary,
+  }));
+
+  const handleBarPress = (index: number) => {
+    haptic.light();
+    setSelectedDay(index);
+  };
 
   return (
     <View style={styles.container}>
@@ -64,18 +141,11 @@ export function CarbTracker({ days = SAMPLE_DAYS, target = 200, compact = false 
 
       {/* Progress bar */}
       <View style={[styles.progressBg, { backgroundColor: themeColors.bg }]}>
-        <View
-          style={[
-            styles.progressFill,
-            {
-              width: `${progressPercent * 100}%`,
-              backgroundColor: isOverTarget ? colors.glucose.high : themeColors.primary,
-            },
-          ]}
-        />
+        <Animated.View style={[styles.progressFill, topProgressStyle]} />
       </View>
 
       {/* Bar chart */}
+      <Animated.View entering={FadeIn.duration(400)}>
       <Svg width="100%" height={barMaxHeight + 30} viewBox={`0 0 ${chartWidth} ${barMaxHeight + 30}`}>
         {/* Target dashed line */}
         <Line
@@ -92,7 +162,6 @@ export function CarbTracker({ days = SAMPLE_DAYS, target = 200, compact = false 
         {/* Stacked bars */}
         {days.map((day, i) => {
           const x = gap + i * (barWidth + gap);
-          const total = day.breakfast + day.lunch + day.dinner + day.snack;
           const isSelected = i === selectedDay;
 
           let yOffset = barMaxHeight;
@@ -107,16 +176,17 @@ export function CarbTracker({ days = SAMPLE_DAYS, target = 200, compact = false 
             const segHeight = (seg.value / maxTotal) * barMaxHeight;
             yOffset -= segHeight;
             return (
-              <Rect
+              <AnimatedBarSegment
                 key={`${i}-${seg.key}`}
                 x={x}
-                y={yOffset}
                 width={barWidth}
-                height={segHeight}
-                rx={3}
-                fill={seg.color}
-                opacity={isSelected ? 1 : 0.5}
-                onPress={() => setSelectedDay(i)}
+                finalY={yOffset}
+                finalHeight={segHeight}
+                color={seg.color}
+                selected={isSelected}
+                progress={chartProgress}
+                delay={i * 0.08}
+                onPress={() => handleBarPress(i)}
               />
             );
           });
@@ -124,7 +194,6 @@ export function CarbTracker({ days = SAMPLE_DAYS, target = 200, compact = false 
 
         {/* Day labels */}
         {days.map((day, i) => {
-          const x = gap + i * (barWidth + gap) + barWidth / 2;
           return (
             <Svg key={`label-${i}`}>
               <Rect x={0} y={0} width={0} height={0} />
@@ -132,11 +201,12 @@ export function CarbTracker({ days = SAMPLE_DAYS, target = 200, compact = false 
           );
         })}
       </Svg>
+      </Animated.View>
 
       {/* Day labels below chart */}
       <View style={styles.dayLabels}>
         {days.map((day, i) => (
-          <Pressable key={day.day} onPress={() => setSelectedDay(i)} style={styles.dayLabel}>
+          <Pressable key={day.day} onPress={() => { haptic.light(); setSelectedDay(i); }} style={styles.dayLabel}>
             <Text
               style={[
                 styles.dayText,
@@ -181,13 +251,24 @@ function MealRow({
   mutedColor: string;
 }) {
   const percent = total > 0 ? value / total : 0;
+  const widthPercent = useSharedValue(0);
+
+  useEffect(() => {
+    widthPercent.value = 0;
+    widthPercent.value = withTiming(percent * 100, { duration: 600 });
+  }, [percent, widthPercent]);
+
+  const barAnimatedStyle = useAnimatedStyle(() => ({
+    width: `${widthPercent.value}%`,
+    backgroundColor: color,
+  }));
 
   return (
     <View style={mealStyles.row}>
       <View style={[mealStyles.dot, { backgroundColor: color }]} />
       <Text style={[mealStyles.label, { color: textColor }]}>{label}</Text>
       <View style={mealStyles.barBg}>
-        <View style={[mealStyles.barFill, { width: `${percent * 100}%`, backgroundColor: color }]} />
+        <Animated.View style={[mealStyles.barFill, barAnimatedStyle]} />
       </View>
       <Text style={[mealStyles.value, { color: mutedColor }]}>{value}g</Text>
     </View>

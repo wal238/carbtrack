@@ -2,6 +2,7 @@ import { StyleSheet, Pressable, Text, View } from 'react-native';
 import Animated, { useAnimatedStyle, withTiming } from 'react-native-reanimated';
 import { borderRadius, spacing, typography } from '@/constants/tokens';
 import { useThemeColors } from '@/lib/theme';
+import { haptic } from '@/lib/haptics';
 import type { TogglePillProps } from '@/lib/types';
 import { useState, useCallback } from 'react';
 
@@ -37,7 +38,13 @@ export function TogglePill({ options, selected, onSelect }: TogglePillProps) {
         <Pressable
           key={option}
           style={styles.segment}
-          onPress={() => onSelect(index)}
+          onPress={() => {
+            haptic.medium();
+            onSelect(index);
+          }}
+          accessibilityRole="button"
+          accessibilityState={{ selected: index === selected }}
+          accessibilityLabel={option}
         >
           <Text
             style={[

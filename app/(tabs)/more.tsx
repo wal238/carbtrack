@@ -1,5 +1,7 @@
 import { StyleSheet, View, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Animated, { FadeInDown } from 'react-native-reanimated';
+import { AnimatedTabScreen } from '@/components/AnimatedTabScreen';
 import { router } from 'expo-router';
 import { useThemeColors } from '@/lib/theme';
 import { useUserPreferencesStore, useOnboardingStore } from '@/lib/store';
@@ -19,29 +21,37 @@ export default function MoreScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.bg }]}>
+      <AnimatedTabScreen tabIndex={4}>
       <View style={styles.content}>
-        <Text style={[styles.title, { color: colors.text }]}>More</Text>
-        <Card>
-          <View style={styles.appInfo}>
-            <AppIcon size={48} />
-            <View>
-              <Text style={[styles.appName, { color: colors.text }]}>CarbTrack</Text>
-              <Text style={[styles.version, { color: colors.textMuted }]}>Version 1.0.0</Text>
-            </View>
-          </View>
-        </Card>
-
-        {__DEV__ && (
+        <Animated.View entering={FadeInDown.duration(220)}>
+          <Text style={[styles.title, { color: colors.text }]}>More</Text>
+        </Animated.View>
+        <Animated.View entering={FadeInDown.delay(70).duration(260)}>
           <Card>
-            <View style={styles.devSection}>
-              <Text style={[styles.devLabel, { color: colors.textMuted }]}>DEV TOOLS</Text>
-              <Button variant="outline" size="sm" onPress={handleResetOnboarding}>
-                Reset Onboarding
-              </Button>
+            <View style={styles.appInfo}>
+              <AppIcon size={48} />
+              <View>
+                <Text style={[styles.appName, { color: colors.text }]}>CarbTrack</Text>
+                <Text style={[styles.version, { color: colors.textMuted }]}>Version 1.0.0</Text>
+              </View>
             </View>
           </Card>
+        </Animated.View>
+
+        {__DEV__ && (
+          <Animated.View entering={FadeInDown.delay(140).duration(260)}>
+            <Card>
+              <View style={styles.devSection}>
+                <Text style={[styles.devLabel, { color: colors.textMuted }]}>DEV TOOLS</Text>
+                <Button variant="outline" size="sm" onPress={handleResetOnboarding}>
+                  Reset Onboarding
+                </Button>
+              </View>
+            </Card>
+          </Animated.View>
         )}
       </View>
+      </AnimatedTabScreen>
     </SafeAreaView>
   );
 }

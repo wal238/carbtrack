@@ -11,8 +11,9 @@ import { Field } from '@/components/ui/Field';
 import { ProgressDots } from '@/components/ui/ProgressDots';
 import { DisclaimerBanner } from '@/components/DisclaimerBanner';
 import { useThemeColors } from '@/lib/theme';
-import { useOnboardingStore, useUserPreferencesStore } from '@/lib/store';
-import { spacing, typography, borderRadius } from '@/constants/tokens';
+import { useOnboardingStore } from '@/lib/store';
+import { getOnboardingProgress } from '@/lib/onboarding-flow';
+import { spacing, typography, borderRadius, colors as tokenColors } from '@/constants/tokens';
 import { DISCLAIMERS } from '@/constants/disclaimers';
 
 const QUICK_VALUES = [
@@ -25,10 +26,9 @@ const QUICK_VALUES = [
 
 export default function CarbRatioScreen() {
   const colors = useThemeColors();
-  const onboarding = useOnboardingStore();
-  const prefs = useUserPreferencesStore();
-  const { carbRatio, carbUnit, setField } = onboarding;
+  const { insulinTherapy, carbRatio, carbUnit, setField } = useOnboardingStore();
   const [value, setValue] = useState(String(carbRatio));
+  const progress = getOnboardingProgress('carb-ratio', insulinTherapy);
 
   const isExchanges = carbUnit === 'exchanges';
   const unitLabel = isExchanges ? 'exchanges per 1U' : 'g per 1U';
@@ -47,38 +47,33 @@ export default function CarbRatioScreen() {
   }
 
   function handleNext() {
-    // Commit onboarding data to persisted store
-    prefs.setGlucoseUnit(onboarding.glucoseUnit);
-    prefs.setCarbUnit(onboarding.carbUnit);
-    prefs.setCarbRatio(Number(value));
-    prefs.setRanges({
-      rangeVeryHigh: onboarding.rangeVeryHigh,
-      rangeTargetHigh: onboarding.rangeTargetHigh,
-      rangeTargetLow: onboarding.rangeTargetLow,
-    });
-    if (onboarding.disclaimerAccepted) {
-      prefs.acceptDisclaimer();
-    }
-    prefs.completeOnboarding();
+    if (!isValidRatio) return;
+    // Save carb ratio to session store before moving on
+    setField('carbRatio', ratioValue);
+    router.push('/(onboarding)/goals');
+  }
 
-    // Also mark session store as completed
-    onboarding.completeOnboarding();
-
-    router.replace('/(tabs)');
+  const ratioValue = Number(value);
+  const isValidRatio = Number.isFinite(ratioValue) && ratioValue > 0 && ratioValue <= 100;
+  let validationMessage = '';
+  if (value.trim() === '') {
+    validationMessage = 'Enter your carb ratio to continue.';
+  } else if (!isValidRatio) {
+    validationMessage = 'Use a valid ratio between 1 and 100.';
   }
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.bg }]}>
-      <Pressable onPress={() => router.back()} style={styles.backButton}>
+      <Pressable onPress={() => router.back()} style={styles.backButton} hitSlop={12} accessibilityRole="button" accessibilityLabel="Go back">
         <Ionicons name="chevron-back" size={24} color={colors.text} />
       </Pressable>
       <View style={styles.dotsWrapper}>
-        <ProgressDots total={9} current={7} />
+        <ProgressDots total={progress.total} current={progress.current} />
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <Text style={[styles.heading, { color: colors.text }]}>
-          What's your carb ratio?
+          What is your carb ratio?
         </Text>
         <Text style={[styles.helper, { color: colors.textSecondary }]}>
           {isExchanges
@@ -96,7 +91,7 @@ export default function CarbRatioScreen() {
 
             <View style={[styles.valueDisplay, { borderColor: colors.primary }]}>
               <Text style={[styles.valueText, { color: colors.text }]}>
-                {value}
+                {value || '--'}
               </Text>
             </View>
 
@@ -119,15 +114,18 @@ export default function CarbRatioScreen() {
         <Text style={[styles.footerText, { color: colors.textMuted }]}>
           You can change this anytime in Settings.
         </Text>
+        {!!validationMessage && (
+          <Text style={styles.validationText}>{validationMessage}</Text>
+        )}
       </ScrollView>
 
       <View style={styles.footer}>
-        <Button fullWidth onPress={handleNext}>
+        <Button fullWidth disabled={!isValidRatio} onPress={handleNext}>
           Next
         </Button>
       </View>
       <View style={styles.mascotFloat}>
-        <Mascot size={44} expression="happy" />
+        <Mascot animate size={60} expression="lookUp" />
       </View>
     </SafeAreaView>
   );
@@ -187,6 +185,13 @@ const styles = StyleSheet.create({
     fontFamily: typography.fontFamily.caption,
     fontSize: typography.fontSize.caption,
     textAlign: 'center',
+  },
+  validationText: {
+    fontFamily: typography.fontFamily.caption,
+    fontSize: typography.fontSize.caption,
+    color: tokenColors.glucose.high,
+    textAlign: 'center',
+    marginTop: -spacing.sm,
   },
   footer: {
     paddingHorizontal: spacing.xl,

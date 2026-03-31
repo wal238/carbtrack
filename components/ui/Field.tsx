@@ -1,4 +1,5 @@
 import { StyleSheet, View, Text, TextInput } from 'react-native';
+import Animated, { useAnimatedStyle, withTiming } from 'react-native-reanimated';
 import { useState } from 'react';
 import { borderRadius, spacing, typography } from '@/constants/tokens';
 import { useThemeColors } from '@/lib/theme';
@@ -16,18 +17,22 @@ export function Field({
   const colors = useThemeColors();
   const [isFocused, setIsFocused] = useState(false);
 
+  const borderAnimStyle = useAnimatedStyle(() => ({
+    borderColor: withTiming(isFocused ? colors.primary : colors.border, { duration: 200 }),
+  }));
+
   return (
     <View style={styles.container}>
       {label && (
         <Text style={[styles.label, { color: colors.textSecondary }]}>{label}</Text>
       )}
-      <View
+      <Animated.View
         style={[
           styles.inputRow,
           {
-            borderColor: isFocused ? colors.primary : colors.border,
             backgroundColor: colors.surface,
           },
+          borderAnimStyle,
         ]}
       >
         {icon && <View style={styles.icon}>{icon}</View>}
@@ -47,7 +52,7 @@ export function Field({
         {unit && (
           <Text style={[styles.unit, { color: colors.textMuted }]}>{unit}</Text>
         )}
-      </View>
+      </Animated.View>
     </View>
   );
 }

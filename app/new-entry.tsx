@@ -1,18 +1,21 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, type ReactNode } from 'react';
 import {
   StyleSheet,
   View,
   Text,
   ScrollView,
-  Pressable,
   Alert,
   KeyboardAvoidingView,
   Platform,
+  type StyleProp,
+  type ViewStyle,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Animated, { FadeIn, FadeOut, ZoomIn } from 'react-native-reanimated';
 import { router } from 'expo-router';
 import { spacing, typography, borderRadius } from '@/constants/tokens';
 import { useThemeColors } from '@/lib/theme';
+import { haptic } from '@/lib/haptics';
 import { useUserPreferencesStore } from '@/lib/store';
 import {
   useGlucoseLogStore,
@@ -27,6 +30,9 @@ import { Field } from '@/components/ui/Field';
 import { Chips } from '@/components/ui/Chips';
 import { TogglePill } from '@/components/ui/TogglePill';
 import { SectionLabel } from '@/components/ui/SectionLabel';
+import { Mascot } from '@/components/Mascot';
+import { SuccessCheck } from '@/components/illustrations/SuccessCheck';
+import { AnimatedPressable, useScalePress } from '@/lib/animations';
 
 const TAB_OPTIONS = ['Glucose', 'Meal', 'Insulin'];
 
@@ -41,6 +47,36 @@ const doseTypeOptions: ChipOption[] = Object.entries(DOSE_TYPES).map(
 interface PendingMealItem {
   name: string;
   carbs: number;
+}
+
+function MotionIconButton({
+  accessibilityLabel,
+  onPress,
+  hitSlop = 8,
+  style,
+  children,
+}: {
+  accessibilityLabel: string;
+  onPress: () => void;
+  hitSlop?: number;
+  style?: StyleProp<ViewStyle>;
+  children: ReactNode;
+}) {
+  const { onPressIn, onPressOut, animatedStyle } = useScalePress();
+
+  return (
+    <AnimatedPressable
+      onPress={onPress}
+      onPressIn={onPressIn}
+      onPressOut={onPressOut}
+      hitSlop={hitSlop}
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel}
+      style={[style, animatedStyle]}
+    >
+      {children}
+    </AnimatedPressable>
+  );
 }
 
 export default function NewEntryScreen() {
@@ -73,23 +109,28 @@ export default function NewEntryScreen() {
     const name = itemName.trim();
     const carbs = parseFloat(itemCarbs);
     if (!name) {
+      haptic.error();
       Alert.alert('Missing name', 'Please enter a food item name.');
       return;
     }
     if (isNaN(carbs) || carbs < 0) {
+      haptic.error();
       Alert.alert('Invalid carbs', 'Please enter a valid carb amount.');
       return;
     }
+    haptic.light();
     setMealItems((prev) => [...prev, { name, carbs }]);
     setItemName('');
     setItemCarbs('');
   }, [itemName, itemCarbs]);
 
   const handleDeleteItem = useCallback((index: number) => {
+    haptic.light();
     setMealItems((prev) => prev.filter((_, i) => i !== index));
   }, []);
 
   const showSuccess = useCallback(() => {
+    haptic.success();
     setSuccess(true);
     setTimeout(() => {
       router.back();
@@ -99,6 +140,7 @@ export default function NewEntryScreen() {
   const handleLogGlucose = useCallback(() => {
     const value = parseFloat(glucoseValue);
     if (isNaN(value) || value <= 0) {
+      haptic.error();
       Alert.alert('Invalid value', 'Please enter a valid glucose reading.');
       return;
     }
@@ -114,6 +156,7 @@ export default function NewEntryScreen() {
 
   const handleLogMeal = useCallback(() => {
     if (mealItems.length === 0) {
+      haptic.error();
       Alert.alert('No items', 'Please add at least one food item.');
       return;
     }
@@ -138,6 +181,7 @@ export default function NewEntryScreen() {
   const handleLogInsulin = useCallback(() => {
     const dose = parseFloat(insulinDose);
     if (isNaN(dose) || dose <= 0) {
+      haptic.error();
       Alert.alert('Invalid dose', 'Please enter a valid insulin dose.');
       return;
     }
@@ -155,11 +199,13 @@ export default function NewEntryScreen() {
   if (success) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: colors.bg }]}>
-        <View style={styles.successContainer}>
+        <Animated.View entering={ZoomIn.duration(300)} style={styles.successContainer}>
+          <SuccessCheck size={80} />
+          <Mascot size={64} expression="wink" />
           <Text style={[styles.successText, { color: colors.primary }]}>
             Logged successfully!
           </Text>
-        </View>
+        </Animated.View>
       </SafeAreaView>
     );
   }
@@ -176,11 +222,18 @@ export default function NewEntryScreen() {
           <Text style={[styles.headerTitle, { color: colors.text }]}>
             New Entry
           </Text>
-          <Pressable onPress={() => router.back()} hitSlop={12}>
+          <MotionIconButton
+            accessibilityLabel="Close new entry"
+            onPress={() => {
+              haptic.light();
+              router.back();
+            }}
+            hitSlop={12}
+          >
             <Text style={[styles.closeButton, { color: colors.textSecondary }]}>
               ✕
             </Text>
-          </Pressable>
+          </MotionIconButton>
         </View>
 
         <View style={styles.pillWrapper}>
@@ -197,7 +250,7 @@ export default function NewEntryScreen() {
           keyboardShouldPersistTaps="handled"
         >
           {selectedTab === 0 && (
-            <>
+            <Animated.View entering={FadeIn.duration(200)} exiting={FadeOut.duration(100)} style={{ gap: spacing.lg }}>
               <Card>
                 <View style={styles.cardContent}>
                   <Field
@@ -219,11 +272,11 @@ export default function NewEntryScreen() {
               <Button variant="primary" fullWidth onPress={handleLogGlucose}>
                 Log Glucose
               </Button>
-            </>
+            </Animated.View>
           )}
 
           {selectedTab === 1 && (
-            <>
+            <Animated.View entering={FadeIn.duration(200)} exiting={FadeOut.duration(100)} style={{ gap: spacing.lg }}>
               <Card>
                 <View style={styles.cardContent}>
                   <Chips
@@ -256,7 +309,8 @@ export default function NewEntryScreen() {
                       >
                         {item.carbs}g
                       </Text>
-                      <Pressable
+                      <MotionIconButton
+                        accessibilityLabel={`Remove ${item.name}`}
                         onPress={() => handleDeleteItem(index)}
                         hitSlop={8}
                       >
@@ -268,7 +322,7 @@ export default function NewEntryScreen() {
                         >
                           ✕
                         </Text>
-                      </Pressable>
+                      </MotionIconButton>
                     </View>
                   ))}
 
@@ -289,7 +343,8 @@ export default function NewEntryScreen() {
                         unit="g"
                       />
                     </View>
-                    <Pressable
+                    <MotionIconButton
+                      accessibilityLabel="Add meal item"
                       onPress={handleAddItem}
                       style={[
                         styles.addButton,
@@ -297,7 +352,7 @@ export default function NewEntryScreen() {
                       ]}
                     >
                       <Text style={[styles.addButtonText, { color: colors.onPrimary }]}>+</Text>
-                    </Pressable>
+                    </MotionIconButton>
                   </View>
 
                   <View
@@ -320,11 +375,11 @@ export default function NewEntryScreen() {
               <Button variant="primary" fullWidth onPress={handleLogMeal}>
                 Log Meal
               </Button>
-            </>
+            </Animated.View>
           )}
 
           {selectedTab === 2 && (
-            <>
+            <Animated.View entering={FadeIn.duration(200)} exiting={FadeOut.duration(100)} style={{ gap: spacing.lg }}>
               <Card>
                 <View style={styles.cardContent}>
                   <Chips
@@ -345,7 +400,7 @@ export default function NewEntryScreen() {
               <Button variant="primary" fullWidth onPress={handleLogInsulin}>
                 Log Insulin
               </Button>
-            </>
+            </Animated.View>
           )}
         </ScrollView>
       </KeyboardAvoidingView>

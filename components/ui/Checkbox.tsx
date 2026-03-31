@@ -1,7 +1,9 @@
 import { StyleSheet, Pressable, View, Text } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
+import Animated, { ZoomIn, ZoomOut } from 'react-native-reanimated';
 import { borderRadius, spacing, typography } from '@/constants/tokens';
 import { useThemeColors } from '@/lib/theme';
+import { haptic } from '@/lib/haptics';
 import type { CheckboxProps } from '@/lib/types';
 import type { ReactNode } from 'react';
 
@@ -9,7 +11,16 @@ export function Checkbox({ checked, onToggle, label }: CheckboxProps) {
   const colors = useThemeColors();
 
   return (
-    <Pressable style={styles.container} onPress={onToggle}>
+    <Pressable
+      style={styles.container}
+      onPress={() => {
+        haptic.medium();
+        onToggle();
+      }}
+      accessibilityRole="checkbox"
+      accessibilityState={{ checked }}
+      accessibilityLabel={typeof label === 'string' ? label : undefined}
+    >
       <View
         style={[
           styles.box,
@@ -20,15 +31,17 @@ export function Checkbox({ checked, onToggle, label }: CheckboxProps) {
         ]}
       >
         {checked && (
-          <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
-            <Path
-              d="M5 12l5 5L20 7"
-              stroke="#FFFFFF"
-              strokeWidth={3}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </Svg>
+          <Animated.View entering={ZoomIn.duration(200)} exiting={ZoomOut.duration(200)}>
+            <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
+              <Path
+                d="M5 12l5 5L20 7"
+                stroke="#FFFFFF"
+                strokeWidth={3}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </Svg>
+          </Animated.View>
         )}
       </View>
       {typeof label === 'string' ? (

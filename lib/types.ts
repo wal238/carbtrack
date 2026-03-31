@@ -36,10 +36,18 @@ export const DOSE_TYPES = {
   long_acting: 'Long acting',
 } as const;
 
+export const USER_GOALS = {
+  better_management: 'Better diabetes management',
+  better_carb_counting: 'Better carb counting',
+  lose_weight: 'Lose weight',
+  learn_nutrition: 'Learn about nutrition',
+} as const;
+
 export type DiabetesType = keyof typeof DIABETES_TYPES;
 export type InsulinTherapy = keyof typeof INSULIN_THERAPIES;
 export type MealType = keyof typeof MEAL_TYPES;
 export type DoseType = keyof typeof DOSE_TYPES;
+export type UserGoal = keyof typeof USER_GOALS;
 
 // Data Models (PRD Section 8)
 export interface User {
@@ -53,6 +61,7 @@ export interface User {
   glucose_unit: GlucoseUnit;
   carb_unit: CarbUnit;
   carb_ratio: number;
+  daily_carb_target: number | null;
   range_very_high: number;
   range_target_high: number;
   range_target_low: number;
@@ -113,6 +122,7 @@ export interface OnboardingState {
   glucoseUnit: GlucoseUnit;
   carbUnit: CarbUnit;
   carbRatio: number;
+  dailyCarbTarget: number | null;
   rangeVeryHigh: number;
   rangeTargetHigh: number;
   rangeTargetLow: number;
@@ -131,6 +141,7 @@ export interface ButtonProps {
   icon?: ReactNode;
   iconRight?: ReactNode;
   onPress: () => void;
+  hapticType?: 'heavy' | 'medium' | 'light' | 'none';
 }
 
 export interface CardProps {
@@ -187,8 +198,9 @@ export interface CheckboxProps {
 
 export interface MascotProps {
   size?: number;
-  expression?: 'happy' | 'wink' | 'neutral';
+  expression?: 'happy' | 'wink' | 'neutral' | 'lookUp';
   glow?: boolean;
+  animate?: boolean;
 }
 
 export interface AppIconProps {

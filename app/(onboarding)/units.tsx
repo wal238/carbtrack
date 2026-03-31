@@ -10,6 +10,7 @@ import { SectionLabel } from '@/components/ui/SectionLabel';
 import { ProgressDots } from '@/components/ui/ProgressDots';
 import { useThemeColors } from '@/lib/theme';
 import { useOnboardingStore } from '@/lib/store';
+import { getOnboardingProgress } from '@/lib/onboarding-flow';
 import { spacing, typography } from '@/constants/tokens';
 
 const GLUCOSE_OPTIONS = ['mg/dL', 'mmol/L'];
@@ -17,7 +18,8 @@ const CARB_OPTIONS = ['Grams', 'Exchanges'];
 
 export default function UnitsScreen() {
   const colors = useThemeColors();
-  const { glucoseUnit, carbUnit, setField } = useOnboardingStore();
+  const { insulinTherapy, glucoseUnit, carbUnit, setField } = useOnboardingStore();
+  const progress = getOnboardingProgress('units', insulinTherapy);
 
   const glucoseIndex = glucoseUnit === 'mgdl' ? 0 : 1;
   const carbIndex = carbUnit === 'exchanges' ? 1 : 0;
@@ -32,11 +34,11 @@ export default function UnitsScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.bg }]}>
-      <Pressable onPress={() => router.back()} style={styles.backButton}>
+      <Pressable onPress={() => router.back()} style={styles.backButton} hitSlop={12} accessibilityRole="button" accessibilityLabel="Go back">
         <Ionicons name="chevron-back" size={24} color={colors.text} />
       </Pressable>
       <View style={styles.dotsWrapper}>
-        <ProgressDots total={9} current={4} />
+        <ProgressDots total={progress.total} current={progress.current} />
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -78,7 +80,7 @@ export default function UnitsScreen() {
         </Button>
       </View>
       <View style={styles.mascotFloat}>
-        <Mascot size={44} expression="wink" />
+        <Mascot animate size={60} expression="lookUp" />
       </View>
     </SafeAreaView>
   );

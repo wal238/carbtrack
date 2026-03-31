@@ -1,8 +1,11 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { StyleSheet, View, Text, ScrollView, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Animated, { FadeInDown, useSharedValue, useAnimatedStyle, withSpring, withSequence } from 'react-native-reanimated';
+import { AnimatedTabScreen } from '@/components/AnimatedTabScreen';
 import { useThemeColors } from '@/lib/theme';
-import { spacing, typography, borderRadius } from '@/constants/tokens';
+import { haptic } from '@/lib/haptics';
+import { spacing, typography } from '@/constants/tokens';
 import { useUserPreferencesStore } from '@/lib/store';
 import { useInsulinLogStore } from '@/lib/data-store';
 import { Card } from '@/components/ui/Card';
@@ -11,7 +14,6 @@ import { Field } from '@/components/ui/Field';
 import { SectionLabel } from '@/components/ui/SectionLabel';
 import { RulerPicker } from '@/components/ui/RulerPicker';
 import { DisclaimerBanner } from '@/components/DisclaimerBanner';
-import { Mascot } from '@/components/Mascot';
 import { DISCLAIMERS } from '@/constants/disclaimers';
 
 export default function CalculatorScreen() {
@@ -48,6 +50,13 @@ export default function CalculatorScreen() {
   }, [currentGlucose, needsCorrection, targetMid, correctionFactor]);
 
   const totalDose = Math.max(0, Math.round((foodDose + correctionDose) * 10) / 10);
+  const glucoseStatus = !glucoseValue || Number.isNaN(currentGlucose)
+    ? 'idle'
+    : currentGlucose > rangeTargetHigh
+      ? 'high'
+      : currentGlucose < rangeTargetLow
+        ? 'low'
+        : 'normal';
 
   function getCorrectionText(): string | null {
     if (!glucoseValue) return null;
@@ -64,6 +73,7 @@ export default function CalculatorScreen() {
 
   function handleLogDose() {
     if (totalDose <= 0) {
+      haptic.error();
       Alert.alert('No dose to log', 'Enter carbs or glucose to calculate a dose.');
       return;
     }
@@ -75,20 +85,52 @@ export default function CalculatorScreen() {
       calculated_from_ratio: carbRatio,
       logged_at: new Date().toISOString(),
     });
+    haptic.success();
     Alert.alert('Logged!', `${totalDose.toFixed(1)}U insulin dose logged.`);
     setCarbValue(0);
     setGlucoseValue('');
   }
 
   function handleClear() {
+    haptic.light();
     setCarbValue(0);
     setGlucoseValue('');
   }
 
   const correctionText = getCorrectionText();
 
+  const resultScale = useSharedValue(1);
+  const prevDoseRef = useRef(totalDose);
+  const prevGlucoseStatusRef = useRef(glucoseStatus);
+
+  useEffect(() => {
+    if (totalDose !== prevDoseRef.current) {
+      prevDoseRef.current = totalDose;
+      if (totalDose > 0) {
+        resultScale.value = withSequence(
+          withSpring(1.05, { damping: 15, stiffness: 300 }),
+          withSpring(1, { damping: 15, stiffness: 300 }),
+        );
+      }
+    }
+  }, [totalDose, resultScale]);
+
+  useEffect(() => {
+    if (glucoseStatus !== prevGlucoseStatusRef.current) {
+      prevGlucoseStatusRef.current = glucoseStatus;
+      if (glucoseStatus === 'high' || glucoseStatus === 'low') {
+        haptic.warning();
+      }
+    }
+  }, [glucoseStatus]);
+
+  const resultAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: resultScale.value }],
+  }));
+
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.bg }]}>
+      <AnimatedTabScreen tabIndex={2}>
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
@@ -131,13 +173,16 @@ export default function CalculatorScreen() {
             />
           </View>
           {correctionText && (
-            <Text style={[styles.correctionText, { color: colors.textSecondary }]}>
-              {correctionText}
-            </Text>
+            <Animated.View entering={FadeInDown.duration(200)}>
+              <Text style={[styles.correctionText, { color: colors.textSecondary }]}>
+                {correctionText}
+              </Text>
+            </Animated.View>
           )}
         </Card>
 
         {/* Result Section */}
+        <Animated.View style={resultAnimatedStyle}>
         <Card style={{ backgroundColor: colors.primaryMuted }}>
           <Text style={[styles.resultLabel, { color: colors.textSecondary }]}>
             Recommended Dose
@@ -189,6 +234,7 @@ export default function CalculatorScreen() {
             </Text>
           </View>
         </Card>
+        </Animated.View>
 
         {/* Disclaimer Footer */}
         <Text style={[styles.disclaimerFooter, { color: colors.textMuted }]}>
@@ -205,6 +251,7 @@ export default function CalculatorScreen() {
           </Button>
         </View>
       </ScrollView>
+      </AnimatedTabScreen>
     </SafeAreaView>
   );
 }

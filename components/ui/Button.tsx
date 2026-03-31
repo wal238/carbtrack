@@ -1,4 +1,4 @@
-import { StyleSheet, Pressable, Text, View, ActivityIndicator } from 'react-native';
+import { StyleSheet, Pressable, Text, View } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -6,6 +6,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { borderRadius, spacing, typography } from '@/constants/tokens';
 import { useThemeColors, useTheme } from '@/lib/theme';
+import { haptic } from '@/lib/haptics';
 import type { ButtonProps } from '@/lib/types';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
@@ -26,6 +27,7 @@ export function Button({
   icon,
   iconRight,
   onPress,
+  hapticType,
 }: ButtonProps) {
   const colors = useThemeColors();
   const { isDark } = useTheme();
@@ -37,6 +39,17 @@ export function Button({
 
   function handlePressIn() {
     scale.value = withTiming(0.97, { duration: 100 });
+
+    if (hapticType === 'none') return;
+    if (hapticType) {
+      haptic[hapticType]();
+    } else if (variant === 'primary') {
+      haptic.heavy();
+    } else if (variant === 'ghost' || variant === 'outline') {
+      haptic.light();
+    } else {
+      haptic.medium();
+    }
   }
 
   function handlePressOut() {
@@ -52,6 +65,9 @@ export function Button({
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
       disabled={disabled}
+      accessibilityRole="button"
+      accessibilityState={{ disabled }}
+      accessibilityLabel={typeof children === 'string' ? children : undefined}
       style={[
         styles.button,
         {

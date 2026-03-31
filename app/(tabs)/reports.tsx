@@ -1,6 +1,15 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { StyleSheet, View, Text, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Animated, {
+  FadeInDown,
+  useAnimatedProps,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+  type SharedValue,
+} from 'react-native-reanimated';
+import { AnimatedTabScreen } from '@/components/AnimatedTabScreen';
 import Svg, { Path, Circle as SvgCircle } from 'react-native-svg';
 import { useThemeColors } from '@/lib/theme';
 import { spacing, typography, borderRadius, colors, glucoseThresholds } from '@/constants/tokens';
@@ -13,6 +22,8 @@ import { TogglePill } from '@/components/ui/TogglePill';
 import { CarbTracker } from '@/components/charts/CarbTracker';
 import type { GlucoseLog, GlucoseUnit, CarbDay, DoseType } from '@/lib/types';
 import { DOSE_TYPES } from '@/lib/types';
+
+const AnimatedPath = Animated.createAnimatedComponent(Path);
 
 // --- Helpers ---
 
@@ -64,6 +75,39 @@ interface DonutSegment {
   label: string;
 }
 
+function DonutArc({
+  d,
+  color,
+  length,
+  circumference,
+  strokeWidth,
+  progress,
+}: {
+  d: string;
+  color: string;
+  length: number;
+  circumference: number;
+  strokeWidth: number;
+  progress: SharedValue<number>;
+}) {
+  const animatedProps = useAnimatedProps(() => ({
+    strokeDashoffset: length * (1 - progress.value),
+    opacity: progress.value,
+  }));
+
+  return (
+    <AnimatedPath
+      d={d}
+      stroke={color}
+      strokeWidth={strokeWidth}
+      fill="none"
+      strokeLinecap="round"
+      strokeDasharray={`${length} ${circumference}`}
+      animatedProps={animatedProps}
+    />
+  );
+}
+
 function DonutChart({
   segments,
   centerText,
@@ -85,6 +129,12 @@ function DonutChart({
   const cx = size / 2;
   const cy = size / 2;
   const circumference = 2 * Math.PI * radius;
+  const progress = useSharedValue(0);
+
+  useEffect(() => {
+    progress.value = 0;
+    progress.value = withTiming(1, { duration: 700 });
+  }, [progress, segments]);
 
   let cumulativePercent = 0;
   const arcs = segments
@@ -106,8 +156,18 @@ function DonutChart({
 
       const d = `M ${x1} ${y1} A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2}`;
 
-      return { d, color: segment.color, key: segment.label };
+      return {
+        d,
+        color: segment.color,
+        key: segment.label,
+        length: circumference * segment.percentage,
+      };
     });
+
+  const centerStyle = useAnimatedStyle(() => ({
+    opacity: progress.value,
+    transform: [{ scale: 0.94 + progress.value * 0.06 }],
+  }));
 
   return (
     <View style={donutStyles.container}>
@@ -124,20 +184,21 @@ function DonutChart({
         />
         {/* Segments */}
         {arcs.map((arc) => (
-          <Path
+          <DonutArc
             key={arc.key}
             d={arc.d}
-            stroke={arc.color}
+            color={arc.color}
+            length={arc.length}
+            circumference={circumference}
             strokeWidth={strokeWidth}
-            fill="none"
-            strokeLinecap="round"
+            progress={progress}
           />
         ))}
       </Svg>
-      <View style={donutStyles.center}>
+      <Animated.View style={[donutStyles.center, centerStyle]}>
         <Text style={[donutStyles.centerText, { color: textColor }]}>{centerText}</Text>
         <Text style={[donutStyles.centerLabel, { color: secondaryColor }]}>{centerLabel}</Text>
-      </View>
+      </Animated.View>
     </View>
   );
 }
@@ -257,6 +318,7 @@ const statStyles = StyleSheet.create({
 export default function ReportsScreen() {
   const themeColors = useThemeColors();
   const glucoseUnit = useUserPreferencesStore((s) => s.glucoseUnit);
+  const streakWidth = useSharedValue(0);
 
   const glucoseLogs = useGlucoseLogStore((s) => s.logs);
   const mealLogs = useMealLogStore((s) => s.logs);
@@ -407,8 +469,18 @@ export default function ReportsScreen() {
 
   const streakPercent = loggingStreak.total > 0 ? loggingStreak.logged / loggingStreak.total : 0;
 
+  useEffect(() => {
+    streakWidth.value = 0;
+    streakWidth.value = withTiming(streakPercent * 100, { duration: 650 });
+  }, [streakPercent, streakWidth]);
+
+  const streakAnimatedStyle = useAnimatedStyle(() => ({
+    width: `${streakWidth.value}%`,
+  }));
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: themeColors.bg }]}>
+      <AnimatedTabScreen tabIndex={1}>
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
@@ -424,56 +496,59 @@ export default function ReportsScreen() {
         />
 
         {/* Time in Range */}
-        <Card>
-          <SectionLabel label="TIME IN RANGE" />
-          {rangeBreakdown.total > 0 ? (
-            <View style={styles.rangeContent}>
-              <DonutChart
-                segments={rangeSegments}
-                centerText={`${Math.round(inRangePercent * 100)}%`}
-                centerLabel="In Range"
-                textColor={themeColors.text}
-                secondaryColor={themeColors.textSecondary}
-              />
-              <View style={styles.legendContainer}>
-                <LegendItem
-                  color={colors.glucose.normal}
-                  label={glucoseUnit === 'mmol' ? 'Normal (3.9–10.0)' : 'Normal (70–180)'}
-                  percentage={rangeBreakdown.total > 0 ? rangeBreakdown.normal / rangeBreakdown.total : 0}
+        <Animated.View entering={FadeInDown.delay(40).duration(260)}>
+          <Card>
+            <SectionLabel label="TIME IN RANGE" />
+            {rangeBreakdown.total > 0 ? (
+              <View style={styles.rangeContent}>
+                <DonutChart
+                  segments={rangeSegments}
+                  centerText={`${Math.round(inRangePercent * 100)}%`}
+                  centerLabel="In Range"
                   textColor={themeColors.text}
                   secondaryColor={themeColors.textSecondary}
                 />
-                <LegendItem
-                  color={colors.glucose.warning}
-                  label={glucoseUnit === 'mmol' ? 'Warning (10.0–13.9)' : 'Warning (180–250)'}
-                  percentage={rangeBreakdown.total > 0 ? rangeBreakdown.warning / rangeBreakdown.total : 0}
-                  textColor={themeColors.text}
-                  secondaryColor={themeColors.textSecondary}
-                />
-                <LegendItem
-                  color={colors.glucose.high}
-                  label={glucoseUnit === 'mmol' ? 'High (>13.9)' : 'High (>250)'}
-                  percentage={rangeBreakdown.total > 0 ? rangeBreakdown.high / rangeBreakdown.total : 0}
-                  textColor={themeColors.text}
-                  secondaryColor={themeColors.textSecondary}
-                />
-                <LegendItem
-                  color={colors.glucose.low}
-                  label={glucoseUnit === 'mmol' ? 'Low (<3.9)' : 'Low (<70)'}
-                  percentage={rangeBreakdown.total > 0 ? rangeBreakdown.low / rangeBreakdown.total : 0}
-                  textColor={themeColors.text}
-                  secondaryColor={themeColors.textSecondary}
-                />
+                <View style={styles.legendContainer}>
+                  <LegendItem
+                    color={colors.glucose.normal}
+                    label={glucoseUnit === 'mmol' ? 'Normal (3.9–10.0)' : 'Normal (70–180)'}
+                    percentage={rangeBreakdown.total > 0 ? rangeBreakdown.normal / rangeBreakdown.total : 0}
+                    textColor={themeColors.text}
+                    secondaryColor={themeColors.textSecondary}
+                  />
+                  <LegendItem
+                    color={colors.glucose.warning}
+                    label={glucoseUnit === 'mmol' ? 'Warning (10.0–13.9)' : 'Warning (180–250)'}
+                    percentage={rangeBreakdown.total > 0 ? rangeBreakdown.warning / rangeBreakdown.total : 0}
+                    textColor={themeColors.text}
+                    secondaryColor={themeColors.textSecondary}
+                  />
+                  <LegendItem
+                    color={colors.glucose.high}
+                    label={glucoseUnit === 'mmol' ? 'High (>13.9)' : 'High (>250)'}
+                    percentage={rangeBreakdown.total > 0 ? rangeBreakdown.high / rangeBreakdown.total : 0}
+                    textColor={themeColors.text}
+                    secondaryColor={themeColors.textSecondary}
+                  />
+                  <LegendItem
+                    color={colors.glucose.low}
+                    label={glucoseUnit === 'mmol' ? 'Low (<3.9)' : 'Low (<70)'}
+                    percentage={rangeBreakdown.total > 0 ? rangeBreakdown.low / rangeBreakdown.total : 0}
+                    textColor={themeColors.text}
+                    secondaryColor={themeColors.textSecondary}
+                  />
+                </View>
               </View>
-            </View>
-          ) : (
-            <Text style={[styles.emptyText, { color: themeColors.textMuted }]}>
-              No glucose data for this period
-            </Text>
-          )}
-        </Card>
+            ) : (
+              <Text style={[styles.emptyText, { color: themeColors.textMuted }]}>
+                No glucose data for this period
+              </Text>
+            )}
+          </Card>
+        </Animated.View>
 
         {/* Glucose Stats */}
+        <Animated.View entering={FadeInDown.delay(100).duration(260)}>
         <Card>
           <SectionLabel label="GLUCOSE STATS" />
           {glucoseStats ? (
@@ -515,8 +590,10 @@ export default function ReportsScreen() {
             </Text>
           )}
         </Card>
+        </Animated.View>
 
         {/* Daily Carbs */}
+        <Animated.View entering={FadeInDown.delay(160).duration(260)}>
         <Card>
           <SectionLabel label="DAILY CARBS" />
           <View style={styles.carbsContent}>
@@ -530,8 +607,10 @@ export default function ReportsScreen() {
             />
           </View>
         </Card>
+        </Animated.View>
 
         {/* Insulin Summary */}
+        <Animated.View entering={FadeInDown.delay(220).duration(260)}>
         <Card>
           <SectionLabel label="INSULIN SUMMARY" />
           {insulinSummary ? (
@@ -568,8 +647,10 @@ export default function ReportsScreen() {
             </Text>
           )}
         </Card>
+        </Animated.View>
 
         {/* Logging Streak */}
+        <Animated.View entering={FadeInDown.delay(280).duration(260)}>
         <Card>
           <SectionLabel label="LOGGING STREAK" />
           <View style={styles.streakContent}>
@@ -577,13 +658,13 @@ export default function ReportsScreen() {
               {loggingStreak.logged} of {loggingStreak.total} days
             </Text>
             <View style={[styles.progressBg, { backgroundColor: themeColors.bg }]}>
-              <View
+              <Animated.View
                 style={[
                   styles.progressFill,
                   {
-                    width: `${Math.round(streakPercent * 100)}%`,
                     backgroundColor: themeColors.primary,
                   },
+                  streakAnimatedStyle,
                 ]}
               />
             </View>
@@ -592,7 +673,9 @@ export default function ReportsScreen() {
             </Text>
           </View>
         </Card>
+        </Animated.View>
       </ScrollView>
+      </AnimatedTabScreen>
     </SafeAreaView>
   );
 }

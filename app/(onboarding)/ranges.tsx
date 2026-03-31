@@ -9,11 +9,14 @@ import { Card } from '@/components/ui/Card';
 import { ProgressDots } from '@/components/ui/ProgressDots';
 import { useThemeColors } from '@/lib/theme';
 import { useOnboardingStore } from '@/lib/store';
+import { getOnboardingProgress } from '@/lib/onboarding-flow';
 import { spacing, typography, colors as tokenColors, borderRadius } from '@/constants/tokens';
 
 export default function RangesScreen() {
   const colors = useThemeColors();
-  const { rangeTargetHigh, rangeTargetLow, setField } = useOnboardingStore();
+  const { insulinTherapy, rangeTargetHigh, rangeTargetLow, glucoseUnit, setField } = useOnboardingStore();
+  const unitLabel = glucoseUnit === 'mmol' ? 'mmol/L' : 'mg/dL';
+  const progress = getOnboardingProgress('ranges', insulinTherapy);
 
   const [highAbove, setHighAbove] = useState(String(rangeTargetHigh));
   const [goodLow, setGoodLow] = useState(String(rangeTargetLow));
@@ -58,13 +61,28 @@ export default function RangesScreen() {
     }
   }
 
+  const highValue = Number(highAbove);
+  const lowValue = Number(goodLow);
+  const hasValidNumbers = Number.isFinite(highValue) && Number.isFinite(lowValue) && highValue > 0 && lowValue > 0;
+  const hasValidOrder = hasValidNumbers && lowValue < highValue;
+  const isRangeValid = hasValidNumbers && hasValidOrder;
+
+  let validationMessage = '';
+  if (highAbove.trim() === '' || goodLow.trim() === '') {
+    validationMessage = 'Enter both low and high target values.';
+  } else if (!hasValidNumbers) {
+    validationMessage = 'Use valid positive numbers for your ranges.';
+  } else if (!hasValidOrder) {
+    validationMessage = 'Low range must be lower than high range.';
+  }
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.bg }]}>
-      <Pressable onPress={() => router.back()} style={styles.backButton}>
+      <Pressable onPress={() => router.back()} style={styles.backButton} hitSlop={12} accessibilityRole="button" accessibilityLabel="Go back">
         <Ionicons name="chevron-back" size={24} color={colors.text} />
       </Pressable>
       <View style={styles.dotsWrapper}>
-        <ProgressDots total={9} current={5} />
+        <ProgressDots total={progress.total} current={progress.current} />
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -95,7 +113,7 @@ export default function RangesScreen() {
                     keyboardType="decimal-pad"
                     selectTextOnFocus
                   />
-                  <Text style={[styles.unitText, { color: colors.textMuted }]}>mmol/L</Text>
+                  <Text style={[styles.unitText, { color: colors.textMuted }]}>{unitLabel}</Text>
                 </View>
               </View>
             </View>
@@ -133,7 +151,7 @@ export default function RangesScreen() {
                     selectTextOnFocus
                   />
                 </View>
-                <Text style={[styles.unitText, { color: colors.textMuted }]}>mmol/L</Text>
+                <Text style={[styles.unitText, { color: colors.textMuted }]}>{unitLabel}</Text>
               </View>
             </View>
 
@@ -157,7 +175,7 @@ export default function RangesScreen() {
                     keyboardType="decimal-pad"
                     selectTextOnFocus
                   />
-                  <Text style={[styles.unitText, { color: colors.textMuted }]}>mmol/L</Text>
+                  <Text style={[styles.unitText, { color: colors.textMuted }]}>{unitLabel}</Text>
                 </View>
               </View>
             </View>
@@ -165,17 +183,30 @@ export default function RangesScreen() {
         </Card>
 
         <Text style={[styles.footnote, { color: colors.textMuted }]}>
-          Defaults: Good range is 3.9 – 10.0 mmol/L. You can adjust these to match your doctor's advice.
+          {glucoseUnit === 'mmol'
+            ? 'Defaults: Good range is 3.9 – 10.0 mmol/L.'
+            : 'Defaults: Good range is 70 – 180 mg/dL.'}{' '}
+          You can adjust these to match your care team guidance.
         </Text>
+
+        {!!validationMessage && (
+          <Text style={[styles.validationText, { color: tokenColors.glucose.high }]}>
+            {validationMessage}
+          </Text>
+        )}
       </ScrollView>
 
       <View style={styles.footer}>
-        <Button fullWidth onPress={() => router.push('/(onboarding)/disclaimer')}>
+        <Button
+          fullWidth
+          disabled={!isRangeValid}
+          onPress={() => router.push('/(onboarding)/disclaimer')}
+        >
           Next
         </Button>
       </View>
       <View style={styles.mascotFloat}>
-        <Mascot size={44} expression="neutral" />
+        <Mascot animate size={60} expression="lookUp" />
       </View>
     </SafeAreaView>
   );
@@ -267,6 +298,12 @@ const styles = StyleSheet.create({
     fontFamily: typography.fontFamily.caption,
     fontSize: typography.fontSize.caption,
     fontStyle: 'italic',
+  },
+  validationText: {
+    fontFamily: typography.fontFamily.caption,
+    fontSize: typography.fontSize.caption,
+    textAlign: 'center',
+    marginTop: -spacing.sm,
   },
   footer: {
     paddingHorizontal: spacing.xl,

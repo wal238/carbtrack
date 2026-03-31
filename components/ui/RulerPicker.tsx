@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { spacing, typography } from '@/constants/tokens';
 import { useThemeColors } from '@/lib/theme';
+import { haptic } from '@/lib/haptics';
 
 const TICK_WIDTH = 10;
 
@@ -87,19 +88,43 @@ export function RulerPicker({
       const offsetX = e.nativeEvent.contentOffset.x;
       const newValue = offsetToValue(offsetX);
       if (newValue !== value) {
+        haptic.selection();
         onValueChange(newValue);
       }
     },
     [offsetToValue, value, onValueChange],
   );
 
+  const momentumStarted = useRef(false);
+
   const handleScrollBeginDrag = useCallback(() => {
     isUserScrolling.current = true;
+    momentumStarted.current = false;
   }, []);
 
-  const handleScrollEnd = useCallback(
+  const handleMomentumBegin = useCallback(() => {
+    momentumStarted.current = true;
+  }, []);
+
+  const handleScrollEndDrag = useCallback(
+    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+      // If momentum will follow, let onMomentumScrollEnd handle it
+      const offset = e.nativeEvent.contentOffset.x;
+      setTimeout(() => {
+        if (!momentumStarted.current) {
+          isUserScrolling.current = false;
+          haptic.light();
+          snapToTick(offset);
+        }
+      }, 50);
+    },
+    [snapToTick],
+  );
+
+  const handleMomentumEnd = useCallback(
     (e: NativeSyntheticEvent<NativeScrollEvent>) => {
       isUserScrolling.current = false;
+      haptic.light();
       snapToTick(e.nativeEvent.contentOffset.x);
     },
     [snapToTick],
@@ -180,8 +205,9 @@ export function RulerPicker({
           scrollEventThrottle={16}
           onScroll={handleScroll}
           onScrollBeginDrag={handleScrollBeginDrag}
-          onMomentumScrollEnd={handleScrollEnd}
-          onScrollEndDrag={handleScrollEnd}
+          onScrollEndDrag={handleScrollEndDrag}
+          onMomentumScrollBegin={handleMomentumBegin}
+          onMomentumScrollEnd={handleMomentumEnd}
           contentContainerStyle={[
             styles.rulerContent,
             { paddingHorizontal: halfWidth },

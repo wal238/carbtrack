@@ -1,4 +1,5 @@
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet } from 'react-native';
+import Animated, { FadeIn } from 'react-native-reanimated';
 import { borderRadius, shadows, spacing } from '@/constants/tokens';
 import { useThemeColors, useTheme } from '@/lib/theme';
 import type { CardProps } from '@/lib/types';
@@ -8,7 +9,8 @@ export function Card({ children, padding, style }: CardProps) {
   const { isDark } = useTheme();
 
   return (
-    <View
+    <Animated.View
+      entering={FadeIn.duration(300)}
       style={[
         styles.card,
         {
@@ -22,7 +24,7 @@ export function Card({ children, padding, style }: CardProps) {
       ]}
     >
       {children}
-    </View>
+    </Animated.View>
   );
 }
 

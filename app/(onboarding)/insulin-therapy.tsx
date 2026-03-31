@@ -11,6 +11,7 @@ import { ProgressDots } from '@/components/ui/ProgressDots';
 import { SectionLabel } from '@/components/ui/SectionLabel';
 import { useThemeColors } from '@/lib/theme';
 import { useOnboardingStore } from '@/lib/store';
+import { getOnboardingProgress, nextAfterInsulin } from '@/lib/onboarding-flow';
 import { spacing, typography } from '@/constants/tokens';
 import type { InsulinTherapy } from '@/lib/types';
 
@@ -22,8 +23,9 @@ const OPTIONS: { label: string; value: InsulinTherapy }[] = [
 
 export default function InsulinTherapyScreen() {
   const colors = useThemeColors();
-  const setField = useOnboardingStore((s) => s.setField);
-  const [selected, setSelected] = useState<InsulinTherapy | null>(null);
+  const { insulinTherapy, setField } = useOnboardingStore();
+  const [selected, setSelected] = useState<InsulinTherapy | null>(insulinTherapy);
+  const progress = getOnboardingProgress('insulin-therapy', insulinTherapy);
 
   function handleSelect(value: InsulinTherapy) {
     setSelected(value);
@@ -32,11 +34,11 @@ export default function InsulinTherapyScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.bg }]}>
-      <Pressable onPress={() => router.back()} style={styles.backButton}>
+      <Pressable onPress={() => router.back()} style={styles.backButton} hitSlop={12} accessibilityRole="button" accessibilityLabel="Go back">
         <Ionicons name="chevron-back" size={24} color={colors.text} />
       </Pressable>
       <View style={styles.dotsWrapper}>
-        <ProgressDots total={9} current={1} />
+        <ProgressDots total={progress.total} current={progress.current} />
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -64,13 +66,20 @@ export default function InsulinTherapyScreen() {
         <Button
           fullWidth
           disabled={selected === null}
-          onPress={() => router.push('/(onboarding)/pills')}
+          onPress={() => {
+            if (!selected) return;
+            if (selected === 'no_insulin') {
+              setField('takesPills', false);
+              setField('meter', 'none');
+            }
+            router.push(nextAfterInsulin(selected));
+          }}
         >
           Next
         </Button>
       </View>
       <View style={styles.mascotFloat}>
-        <Mascot size={44} expression="happy" />
+        <Mascot animate size={60} expression="lookUp" />
       </View>
     </SafeAreaView>
   );

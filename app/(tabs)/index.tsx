@@ -1,16 +1,20 @@
-import { useMemo } from 'react';
-import { StyleSheet, View, Text, ScrollView, Pressable } from 'react-native';
+import { useMemo, useEffect } from 'react';
+import { StyleSheet, View, Text, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Animated, { FadeInDown, FadeInLeft, useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
+import { AnimatedTabScreen } from '@/components/AnimatedTabScreen';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useThemeColors } from '@/lib/theme';
-import { spacing, typography, borderRadius } from '@/constants/tokens';
+import { spacing, typography } from '@/constants/tokens';
 import { Card } from '@/components/ui/Card';
 import { Mascot } from '@/components/Mascot';
 import { GlucoseChart } from '@/components/charts/GlucoseChart';
 import { SectionLabel } from '@/components/ui/SectionLabel';
 import { useGlucoseLogStore, useMealLogStore, useInsulinLogStore } from '@/lib/data-store';
 import { useUserPreferencesStore } from '@/lib/store';
+import { haptic } from '@/lib/haptics';
+import { AnimatedPressable, useScalePress } from '@/lib/animations';
 import { MEAL_TYPES, DOSE_TYPES } from '@/lib/types';
 import type { GlucoseDataPoint, InsulinDoseMarker, MealType, DoseType } from '@/lib/types';
 
@@ -41,6 +45,8 @@ const DEFAULT_CARB_TARGET = 200;
 export default function TrendScreen() {
   const themeColors = useThemeColors();
   const router = useRouter();
+  const addButtonPress = useScalePress();
+  const searchButtonPress = useScalePress();
 
   const glucoseUnit = useUserPreferencesStore((s) => s.glucoseUnit);
 
@@ -195,31 +201,64 @@ export default function TrendScreen() {
 
   const carbProgress = Math.min(totalCarbs / DEFAULT_CARB_TARGET, 1);
 
+  const progressWidth = useSharedValue(0);
+
+  useEffect(() => {
+    progressWidth.value = withTiming(carbProgress * 100, { duration: 600 });
+  }, [carbProgress, progressWidth]);
+
+  const progressAnimatedStyle = useAnimatedStyle(() => ({
+    width: `${progressWidth.value}%`,
+  }));
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: themeColors.bg }]}>
+      <AnimatedTabScreen tabIndex={0}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={styles.header}>
           <Text style={[styles.title, { color: themeColors.text }]}>My Trend</Text>
           <View style={styles.headerActions}>
-            <Pressable
-              style={[styles.headerBtn, { backgroundColor: themeColors.primary }]}
-              onPress={() => router.push('/new-entry')}
+            <AnimatedPressable
+              style={[
+                styles.headerBtn,
+                { backgroundColor: themeColors.primary },
+                addButtonPress.animatedStyle,
+              ]}
+              onPress={() => {
+                haptic.medium();
+                router.push('/new-entry');
+              }}
+              onPressIn={addButtonPress.onPressIn}
+              onPressOut={addButtonPress.onPressOut}
+              accessibilityRole="button"
+              accessibilityLabel="Add new entry"
+              hitSlop={8}
             >
               <Ionicons name="add" size={22} color={themeColors.onPrimary} />
-            </Pressable>
-            <Pressable
+            </AnimatedPressable>
+            <AnimatedPressable
               style={[
                 styles.headerBtn,
                 { backgroundColor: themeColors.surface, borderWidth: 1, borderColor: themeColors.border },
+                searchButtonPress.animatedStyle,
               ]}
+              onPress={() => {
+                haptic.light();
+              }}
+              onPressIn={searchButtonPress.onPressIn}
+              onPressOut={searchButtonPress.onPressOut}
+              accessibilityRole="button"
+              accessibilityLabel="Search entries"
+              hitSlop={8}
             >
               <Ionicons name="search" size={20} color={themeColors.textSecondary} />
-            </Pressable>
+            </AnimatedPressable>
           </View>
         </View>
 
         {/* Glucose Chart */}
+        <Animated.View entering={FadeInDown.delay(0).duration(300).springify()}>
         <Card>
           {glucoseChartData.length > 0 ? (
             <GlucoseChart data={glucoseChartData} insulinDoses={insulinMarkers} compact />
@@ -232,21 +271,23 @@ export default function TrendScreen() {
             </View>
           )}
         </Card>
+        </Animated.View>
 
         {/* Carbs Today */}
+        <Animated.View entering={FadeInDown.delay(80).duration(300).springify()}>
         <Card>
           <View style={styles.carbRow}>
             <Ionicons name="flame" size={20} color={themeColors.dinner} />
             <Text style={[styles.carbLabel, { color: themeColors.textSecondary }]}>Carbs today</Text>
           </View>
           <View style={[styles.progressBg, { backgroundColor: themeColors.bg }]}>
-            <View
+            <Animated.View
               style={[
                 styles.progressFill,
                 {
-                  width: `${Math.round(carbProgress * 100)}%`,
                   backgroundColor: themeColors.primary,
                 },
+                progressAnimatedStyle,
               ]}
             />
           </View>
@@ -270,8 +311,10 @@ export default function TrendScreen() {
             </View>
           )}
         </Card>
+        </Animated.View>
 
         {/* Insulin Today */}
+        <Animated.View entering={FadeInDown.delay(160).duration(300).springify()}>
         <Card>
           <View style={styles.carbRow}>
             <Ionicons name="medkit-outline" size={20} color={themeColors.secondary} />
@@ -303,8 +346,10 @@ export default function TrendScreen() {
             </Text>
           )}
         </Card>
+        </Animated.View>
 
         {/* Estimated A1c */}
+        <Animated.View entering={FadeInDown.delay(240).duration(300).springify()}>
         <Card>
           <View style={styles.a1cRow}>
             <View>
@@ -316,6 +361,7 @@ export default function TrendScreen() {
             <Mascot size={38} expression="happy" />
           </View>
         </Card>
+        </Animated.View>
 
         {/* Recent Activity */}
         {recentActivity.length > 0 && (
@@ -323,8 +369,9 @@ export default function TrendScreen() {
             <SectionLabel label="Recent Activity" />
             <Card>
               {recentActivity.map((entry, index) => (
-                <View
+                <Animated.View
                   key={`${entry.type}-${entry.loggedAt}-${index}`}
+                  entering={FadeInLeft.delay(index * 60).duration(250)}
                   style={[
                     styles.activityRow,
                     index < recentActivity.length - 1 && {
@@ -355,12 +402,13 @@ export default function TrendScreen() {
                   <Text style={[styles.activityTime, { color: themeColors.textMuted }]}>
                     {formatTimeAgo(entry.loggedAt)}
                   </Text>
-                </View>
+                </Animated.View>
               ))}
             </Card>
           </>
         )}
       </ScrollView>
+      </AnimatedTabScreen>
     </SafeAreaView>
   );
 }

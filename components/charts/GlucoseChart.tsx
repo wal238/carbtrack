@@ -1,10 +1,20 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { StyleSheet, View, Text } from 'react-native';
 import Svg, { Rect, Line, Circle, Path, Text as SvgText } from 'react-native-svg';
+import Animated, {
+  FadeIn,
+  useAnimatedProps,
+  useSharedValue,
+  withTiming,
+  type SharedValue,
+} from 'react-native-reanimated';
 import { spacing, typography, colors } from '@/constants/tokens';
 import { useThemeColors } from '@/lib/theme';
 import { getGlucoseColor } from '@/lib/colors';
 import type { GlucoseDataPoint, InsulinDoseMarker } from '@/lib/types';
+
+const AnimatedPath = Animated.createAnimatedComponent(Path);
+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
 interface GlucoseChartProps {
   data?: GlucoseDataPoint[];
@@ -27,17 +37,44 @@ const SAMPLE_DATA: GlucoseDataPoint[] = [
 
 const Y_LABELS = [0, 3.9, 10, 16];
 
+function AnimatedDataPoint({
+  cx,
+  cy,
+  fill,
+  progress,
+}: {
+  cx: number;
+  cy: number;
+  fill: string;
+  progress: SharedValue<number>;
+}) {
+  const animatedProps = useAnimatedProps(() => ({
+    r: 1 + progress.value * 3,
+    opacity: progress.value,
+  }));
+
+  return (
+    <AnimatedCircle
+      cx={cx}
+      cy={cy}
+      fill={fill}
+      stroke="#FFFFFF"
+      strokeWidth={1.5}
+      animatedProps={animatedProps}
+    />
+  );
+}
+
 export function GlucoseChart({ data = SAMPLE_DATA, insulinDoses = [], height = 155, compact = false }: GlucoseChartProps) {
   const themeColors = useThemeColors();
+  const progress = useSharedValue(0);
   const chartWidth = 300;
   const chartHeight = height - 30;
   const paddingLeft = 30;
   const paddingBottom = 20;
+  const hasData = data.length > 0;
 
-  // Guard against empty data
-  if (data.length === 0) return null;
-
-  const latestReading = data[data.length - 1];
+  const latestReading = hasData ? data[data.length - 1] : SAMPLE_DATA[SAMPLE_DATA.length - 1];
   const latestColor = getGlucoseColor(latestReading.value, latestReading.unit);
   const unitLabel = latestReading.unit === 'mmol' ? 'mmol/L' : 'mg/dL';
 
@@ -67,6 +104,27 @@ export function GlucoseChart({ data = SAMPLE_DATA, insulinDoses = [], height = 1
         return i % step === 0 || i === data.length - 1;
       }).map((d) => d.time);
 
+  const lineLength = points.slice(1).reduce((sum, point, index) => {
+    const prev = points[index];
+    return sum + Math.hypot(point.x - prev.x, point.y - prev.y);
+  }, 0);
+
+  useEffect(() => {
+    progress.value = 0;
+    progress.value = withTiming(1, { duration: 750 });
+  }, [data, progress]);
+
+  const lineAnimatedProps = useAnimatedProps(() => ({
+    strokeDashoffset: lineLength * (1 - progress.value),
+    opacity: progress.value,
+  }));
+
+  const areaAnimatedProps = useAnimatedProps(() => ({
+    opacity: 0.07 * progress.value,
+  }));
+
+  if (!hasData) return null;
+
   return (
     <View style={styles.container}>
       {!compact && (
@@ -91,6 +149,7 @@ export function GlucoseChart({ data = SAMPLE_DATA, insulinDoses = [], height = 1
         </View>
       )}
 
+      <Animated.View entering={FadeIn.duration(500)}>
       <Svg width="100%" height={height} viewBox={`0 0 ${chartWidth} ${height}`}>
         {/* Target range band */}
         <Rect
@@ -129,11 +188,18 @@ export function GlucoseChart({ data = SAMPLE_DATA, insulinDoses = [], height = 1
         {/* Bezier curve (only render if 2+ points) */}
         {data.length > 1 && (
           <>
-            <Path d={pathD} fill="none" stroke={themeColors.primary} strokeWidth={2} />
-            <Path
+            <AnimatedPath
+              d={pathD}
+              fill="none"
+              stroke={themeColors.primary}
+              strokeWidth={2}
+              strokeDasharray={`${lineLength} ${Math.max(lineLength, 1)}`}
+              animatedProps={lineAnimatedProps}
+            />
+            <AnimatedPath
               d={`${pathD} L ${points[points.length - 1].x} ${chartHeight - paddingBottom} L ${points[0].x} ${chartHeight - paddingBottom} Z`}
               fill={themeColors.primary}
-              opacity={0.07}
+              animatedProps={areaAnimatedProps}
             />
           </>
         )}
@@ -186,14 +252,12 @@ export function GlucoseChart({ data = SAMPLE_DATA, insulinDoses = [], height = 1
 
         {/* Data points */}
         {data.map((d, i) => (
-          <Circle
+          <AnimatedDataPoint
             key={i}
             cx={xScale(i)}
             cy={yScale(d.value)}
-            r={4}
             fill={getGlucoseColor(d.value, d.unit)}
-            stroke="#FFFFFF"
-            strokeWidth={1.5}
+            progress={progress}
           />
         ))}
 
@@ -211,6 +275,7 @@ export function GlucoseChart({ data = SAMPLE_DATA, insulinDoses = [], height = 1
           </SvgText>
         ))}
       </Svg>
+      </Animated.View>
     </View>
   );
 }

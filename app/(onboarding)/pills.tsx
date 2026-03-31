@@ -10,12 +10,14 @@ import { ProgressDots } from '@/components/ui/ProgressDots';
 import { Mascot } from '@/components/Mascot';
 import { useThemeColors } from '@/lib/theme';
 import { useOnboardingStore } from '@/lib/store';
+import { getOnboardingProgress } from '@/lib/onboarding-flow';
 import { spacing, typography } from '@/constants/tokens';
 
 export default function PillsScreen() {
   const colors = useThemeColors();
-  const setField = useOnboardingStore((s) => s.setField);
-  const [selected, setSelected] = useState<boolean | null>(null);
+  const { insulinTherapy, takesPills, setField } = useOnboardingStore();
+  const [selected, setSelected] = useState<boolean | null>(takesPills);
+  const progress = getOnboardingProgress('pills', insulinTherapy);
 
   function handleSelect(value: boolean) {
     setSelected(value);
@@ -24,16 +26,16 @@ export default function PillsScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.bg }]}>
-      <Pressable onPress={() => router.back()} style={styles.backButton}>
+      <Pressable onPress={() => router.back()} style={styles.backButton} hitSlop={12} accessibilityRole="button" accessibilityLabel="Go back">
         <Ionicons name="chevron-back" size={24} color={colors.text} />
       </Pressable>
       <View style={styles.dotsWrapper}>
-        <ProgressDots total={9} current={2} />
+        <ProgressDots total={progress.total} current={progress.current} />
       </View>
 
       <View style={styles.content}>
         <View style={styles.mascotWrapper}>
-          <Mascot size={60} expression="neutral" />
+          <Mascot animate size={60} expression="neutral" />
         </View>
 
         <Text style={[styles.heading, { color: colors.text }]}>
@@ -68,7 +70,7 @@ export default function PillsScreen() {
         </Button>
       </View>
       <View style={styles.mascotFloat}>
-        <Mascot size={44} expression="wink" />
+        <Mascot animate size={60} expression="lookUp" />
       </View>
     </SafeAreaView>
   );

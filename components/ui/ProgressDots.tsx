@@ -8,7 +8,7 @@ export function ProgressDots({ total, current }: ProgressDotsProps) {
   const colors = useThemeColors();
 
   return (
-    <View style={styles.container}>
+    <View style={styles.container} accessibilityRole="progressbar" accessibilityLabel={`Step ${current + 1} of ${total}`}>
       {Array.from({ length: total }, (_, i) => (
         <Dot key={i} active={i === current} colors={colors} />
       ))}

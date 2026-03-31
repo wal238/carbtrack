@@ -7,6 +7,7 @@ import type {
   CarbUnit,
   DiabetesType,
   InsulinTherapy,
+  UserGoal,
 } from '@/lib/types';
 
 // Custom storage adapter for expo-secure-store
@@ -30,9 +31,11 @@ interface OnboardingStore {
   insulinTherapy: InsulinTherapy | null;
   takesPills: boolean | null;
   meter: string | null;
+  goal: UserGoal | null;
   glucoseUnit: GlucoseUnit;
   carbUnit: CarbUnit;
   carbRatio: number;
+  dailyCarbTarget: number | null;
   rangeVeryHigh: number;
   rangeTargetHigh: number;
   rangeTargetLow: number;
@@ -52,9 +55,11 @@ const onboardingDefaults = {
   insulinTherapy: null as InsulinTherapy | null,
   takesPills: null as boolean | null,
   meter: null as string | null,
+  goal: null as UserGoal | null,
   glucoseUnit: 'mmol' as GlucoseUnit,
   carbUnit: 'grams' as CarbUnit,
   carbRatio: 10,
+  dailyCarbTarget: null as number | null,
   rangeVeryHigh: 13.9,
   rangeTargetHigh: 10.0,
   rangeTargetLow: 3.9,
@@ -78,6 +83,7 @@ interface UserPreferencesStore {
   glucoseUnit: GlucoseUnit;
   carbUnit: CarbUnit;
   carbRatio: number;
+  dailyCarbTarget: number | null;
   rangeVeryHigh: number;
   rangeTargetHigh: number;
   rangeTargetLow: number;
@@ -89,6 +95,7 @@ interface UserPreferencesStore {
   setGlucoseUnit: (unit: GlucoseUnit) => void;
   setCarbUnit: (unit: CarbUnit) => void;
   setCarbRatio: (ratio: number) => void;
+  setDailyCarbTarget: (target: number | null) => void;
   setRanges: (ranges: {
     rangeVeryHigh: number;
     rangeTargetHigh: number;
@@ -105,6 +112,7 @@ export const useUserPreferencesStore = create<UserPreferencesStore>()(
       glucoseUnit: 'mmol',
       carbUnit: 'grams',
       carbRatio: 10,
+      dailyCarbTarget: null,
       rangeVeryHigh: 13.9,
       rangeTargetHigh: 10.0,
       rangeTargetLow: 3.9,
@@ -116,6 +124,7 @@ export const useUserPreferencesStore = create<UserPreferencesStore>()(
       setGlucoseUnit: (unit) => set({ glucoseUnit: unit }),
       setCarbUnit: (unit) => set({ carbUnit: unit }),
       setCarbRatio: (ratio) => set({ carbRatio: ratio }),
+      setDailyCarbTarget: (target) => set({ dailyCarbTarget: target }),
       setRanges: (ranges) => set(ranges),
       acceptDisclaimer: () =>
         set({ disclaimerAccepted: true, disclaimerAcceptedAt: new Date().toISOString() }),
