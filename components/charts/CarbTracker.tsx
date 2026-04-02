@@ -84,7 +84,8 @@ function AnimatedBarSegment({
 
 export function CarbTracker({ days = SAMPLE_DAYS, target = 200, compact = false }: CarbTrackerProps) {
   const themeColors = useThemeColors();
-  const [selectedDay, setSelectedDay] = useState(6); // Sunday
+  const latestDayIndex = Math.max(days.length - 1, 0);
+  const [selectedDay, setSelectedDay] = useState(latestDayIndex);
   const chartProgress = useSharedValue(0);
 
   const todayTotal = days[selectedDay]
@@ -111,6 +112,10 @@ export function CarbTracker({ days = SAMPLE_DAYS, target = 200, compact = false 
     chartProgress.value = 0;
     chartProgress.value = withTiming(1, { duration: 850 });
   }, [days, chartProgress]);
+
+  useEffect(() => {
+    setSelectedDay(latestDayIndex);
+  }, [latestDayIndex]);
 
   const topProgressStyle = useAnimatedStyle(() => ({
     width: `${topProgressWidth.value}%`,

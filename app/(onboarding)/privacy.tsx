@@ -8,6 +8,7 @@ import { Card } from '@/components/ui/Card';
 import { Checkbox } from '@/components/ui/Checkbox';
 import { useThemeColors } from '@/lib/theme';
 import { spacing, typography } from '@/constants/tokens';
+import { OnboardingBackButton, OnboardingMotionBlock } from '@/components/onboarding-motion';
 
 export default function PrivacyScreen() {
   const colors = useThemeColors();
@@ -26,17 +27,16 @@ export default function PrivacyScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.surface }]}>
-      <Pressable onPress={() => router.back()} style={styles.backButton} hitSlop={12} accessibilityRole="button" accessibilityLabel="Go back">
-        <Ionicons name="chevron-back" size={24} color={colors.text} />
-      </Pressable>
+      <OnboardingBackButton color={colors.text} onPress={() => router.back()} />
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <View style={styles.header}>
+        <OnboardingMotionBlock style={styles.header}>
           <Text style={[styles.heading, { color: colors.text }]}>Privacy & Legal</Text>
           <Text style={[styles.subtext, { color: colors.textSecondary }]}>
             Accept all required consents to create your account.
           </Text>
-        </View>
+        </OnboardingMotionBlock>
 
+        <OnboardingMotionBlock delay={70}>
         <Card>
           <View style={styles.checkboxList}>
             <Checkbox
@@ -52,8 +52,9 @@ export default function PrivacyScreen() {
             />
           </View>
         </Card>
+        </OnboardingMotionBlock>
 
-        <View style={styles.linksSection}>
+        <OnboardingMotionBlock delay={140} style={styles.linksSection}>
           <Text style={[styles.linksLabel, { color: colors.textSecondary }]}>
             Read documents before accepting
           </Text>
@@ -69,10 +70,10 @@ export default function PrivacyScreen() {
             </Text>
             <Ionicons name="chevron-forward" size={16} color={colors.primary} />
           </Pressable>
-        </View>
+        </OnboardingMotionBlock>
       </ScrollView>
 
-      <View style={styles.footer}>
+      <OnboardingMotionBlock delay={200} style={styles.footer}>
         <Button
           fullWidth
           disabled={!allAccepted}
@@ -80,7 +81,7 @@ export default function PrivacyScreen() {
         >
           Continue
         </Button>
-      </View>
+      </OnboardingMotionBlock>
     </SafeAreaView>
   );
 }
@@ -88,12 +89,6 @@ export default function PrivacyScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  backButton: {
-    paddingHorizontal: 16,
-    paddingTop: 8,
-    paddingBottom: 4,
-    alignSelf: 'flex-start' as const,
   },
   scrollContent: {
     paddingHorizontal: spacing.xl,

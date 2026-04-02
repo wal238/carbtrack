@@ -231,3 +231,7 @@ export interface CarbDay {
   dinner: number;
   snack: number;
 }
+
+// Subscription Types
+export type SubscriptionStatus = 'active' | 'expired' | 'none';
+export type SubscriptionPeriod = 'monthly' | 'yearly' | 'lifetime';

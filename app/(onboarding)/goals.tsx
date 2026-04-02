@@ -1,8 +1,7 @@
 import { useState } from 'react';
-import { StyleSheet, Text, View, ScrollView, Pressable } from 'react-native';
+import { StyleSheet, Text, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
 import { Button } from '@/components/ui/Button';
 import { Mascot } from '@/components/Mascot';
 import { RadioCard } from '@/components/ui/RadioCard';
@@ -13,6 +12,7 @@ import { getOnboardingProgress } from '@/lib/onboarding-flow';
 import { USER_GOALS } from '@/lib/types';
 import type { UserGoal } from '@/lib/types';
 import { spacing, typography } from '@/constants/tokens';
+import { OnboardingBackButton, OnboardingMotionBlock } from '@/components/onboarding-motion';
 
 const GOAL_OPTIONS: { value: UserGoal; label: string; sublabel: string }[] = [
   {
@@ -50,26 +50,26 @@ export default function GoalsScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.primaryMuted }]}>
-      <Pressable onPress={() => router.back()} style={styles.backButton} hitSlop={12} accessibilityRole="button" accessibilityLabel="Go back">
-        <Ionicons name="chevron-back" size={24} color={colors.text} />
-      </Pressable>
-      <View style={styles.dotsWrapper}>
+      <OnboardingBackButton color={colors.text} onPress={() => router.back()} />
+      <OnboardingMotionBlock style={styles.dotsWrapper}>
         <ProgressDots total={progress.total} current={progress.current} />
-      </View>
+      </OnboardingMotionBlock>
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.mascotSection}>
+        <OnboardingMotionBlock delay={60} style={styles.mascotSection}>
           <Mascot animate size={100} expression="wink" glow />
-        </View>
+        </OnboardingMotionBlock>
 
-        <Text style={[styles.heading, { color: colors.text }]}>
-          What is your goal?
-        </Text>
+        <OnboardingMotionBlock delay={100}>
+          <Text style={[styles.heading, { color: colors.text }]}>
+            What is your goal?
+          </Text>
+        </OnboardingMotionBlock>
 
-        <View style={styles.options}>
+        <OnboardingMotionBlock delay={150} style={styles.options}>
           {GOAL_OPTIONS.map((option) => (
             <RadioCard
               key={option.value}
@@ -79,10 +79,10 @@ export default function GoalsScreen() {
               onPress={() => handleSelect(option.value)}
             />
           ))}
-        </View>
+        </OnboardingMotionBlock>
       </ScrollView>
 
-      <View style={styles.footer}>
+      <OnboardingMotionBlock delay={210} style={styles.footer}>
         <Button
           fullWidth
           disabled={selected === null}
@@ -90,7 +90,7 @@ export default function GoalsScreen() {
         >
           Next
         </Button>
-      </View>
+      </OnboardingMotionBlock>
     </SafeAreaView>
   );
 }
@@ -98,12 +98,6 @@ export default function GoalsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  backButton: {
-    paddingHorizontal: 16,
-    paddingTop: 8,
-    paddingBottom: 4,
-    alignSelf: 'flex-start' as const,
   },
   scrollContent: {
     flexGrow: 1,

@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=960, initial-scale=1.0">
+<title>CarbTrack Pro — Paywall Mockup (Light + Dark)</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    background: #1a1a2e;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 40px;
+    min-height: 100vh;
+    padding: 40px 20px;
+    font-family: -apple-system, 'SF Pro Display', 'SF Pro Text', system-ui, BlinkMacSystemFont, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    flex-wrap: wrap;
+  }
+
+  .label {
+    position: absolute;
+    top: -32px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  /* ── Phone frame ── */
+  .phone-frame {
+    width: 390px;
+    min-height: 844px;
+    position: relative;
+    overflow: hidden;
+    border-radius: 44px;
+    flex-shrink: 0;
+  }
+
+  /* ── DARK THEME ── */
+  .dark {
+    --bg: #0F2027;
+    --surface: #1A2F38;
+    --primary: #2EC4B6;
+    --primary-glow: rgba(46, 196, 182, 0.15);
+    --primary-dim: rgba(46, 196, 182, 0.08);
+    --primary-soft: rgba(46, 196, 182, 0.12);
+    --secondary: #4C7DFF;
+    --text: #FFFFFF;
+    --text-body: #94B3C0;
+    --text-muted: #5A7A88;
+    --border: #2A4550;
+    --on-primary: #0F2027;
+    --close-bg: rgba(255,255,255,0.08);
+    --close-hover: rgba(255,255,255,0.14);
+    --close-stroke: #94B3C0;
+    --plan-hover-bg: rgba(26, 47, 56, 0.9);
+    --plan-selected-bg: linear-gradient(135deg, rgba(46,196,182,0.08) 0%, rgba(26,47,56,1) 100%);
+    --home-indicator: rgba(255,255,255,0.2);
+    --mascot-body: #FFFFFF;
+    --mascot-stroke: #D8DCE4;
+    --mascot-inner: #E8EBF0;
+    --mascot-nub: #D0D5DE;
+    --mascot-brow: #C0C6D0;
+    --mascot-eye: #0F2027;
+    --mascot-shine: #FFFFFF;
+    --mascot-blush: #FBCCC4;
+    --glow-bg: radial-gradient(circle, rgba(46,196,182,0.12) 0%, transparent 70%);
+    --frame-shadow: 0 0 0 1px rgba(255,255,255,0.06), 0 25px 80px rgba(0,0,0,0.6), 0 0 120px rgba(46,196,182,0.04);
+    background: var(--bg);
+    box-shadow: var(--frame-shadow);
+  }
+  .dark .label { color: #5A7A88; }
+
+  /* ── LIGHT THEME ── */
+  .light {
+    --bg: #F5F7FA;
+    --surface: #FFFFFF;
+    --primary: #2EC4B6;
+    --primary-glow: rgba(46, 196, 182, 0.12);
+    --primary-dim: rgba(46, 196, 182, 0.06);
+    --primary-soft: rgba(46, 196, 182, 0.1);
+    --secondary: #4C7DFF;
+    --text: #0F2027;
+    --text-body: #5A6B78;
+    --text-muted: #6B7C89;
+    --border: #E2E6ED;
+    --on-primary: #0F2027;
+    --close-bg: rgba(0,0,0,0.05);
+    --close-hover: rgba(0,0,0,0.1);
+    --close-stroke: #6B7C89;
+    --plan-hover-bg: rgba(255,255,255,0.95);
+    --plan-selected-bg: linear-gradient(135deg, rgba(46,196,182,0.05) 0%, rgba(255,255,255,1) 100%);
+    --home-indicator: rgba(0,0,0,0.18);
+    --mascot-body: #FFFFFF;
+    --mascot-stroke: #D8DCE4;
+    --mascot-inner: #E8EBF0;
+    --mascot-nub: #D0D5DE;
+    --mascot-brow: #C0C6D0;
+    --mascot-eye: #0F2027;
+    --mascot-shine: #FFFFFF;
+    --mascot-blush: #FBCCC4;
+    --glow-bg: radial-gradient(circle, rgba(46,196,182,0.08) 0%, transparent 70%);
+    --frame-shadow: 0 0 0 1px rgba(0,0,0,0.08), 0 25px 80px rgba(0,0,0,0.15);
+    background: var(--bg);
+    box-shadow: var(--frame-shadow);
+  }
+  .light .label { color: #6B7C89; }
+  .light .status-bar .time { color: var(--text); }
+  .light .status-bar .icons svg { fill: var(--text); }
+
+  /* ── Ambient glow ── */
+  .phone-frame::before {
+    content: '';
+    position: absolute;
+    top: -120px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 300px;
+    height: 300px;
+    background: var(--glow-bg);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .paywall {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 844px;
+    padding: 60px 24px 40px;
+  }
+
+  /* ── Close button ── */
+  .close-btn {
+    position: absolute;
+    top: 60px;
+    right: 20px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--close-bg);
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s, transform 0.15s;
+    z-index: 10;
+    backdrop-filter: blur(10px);
+  }
+  .close-btn:hover { background: var(--close-hover); }
+  .close-btn:active { transform: scale(0.9); }
+  .close-btn svg { width: 14px; height: 14px; }
+
+  /* ── Header ── */
+  .header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    margin-bottom: 32px;
+    animation: fadeSlideIn 0.6s ease-out both;
+  }
+
+  /* Mascot */
+  .mascot-wrap {
+    width: 88px;
+    height: 88px;
+    margin-bottom: 20px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: mascotBob 3s ease-in-out infinite;
+  }
+  .mascot-glow {
+    position: absolute;
+    width: 108px;
+    height: 108px;
+    border-radius: 50%;
+    top: -10px;
+    left: -10px;
+  }
+  .dark .mascot-glow { background: rgba(232, 250, 248, 0.5); }
+  .light .mascot-glow { background: rgba(208, 244, 240, 0.6); }
+
+  @keyframes mascotBob {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-4px); }
+  }
+
+  .header h1 {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.4px;
+    line-height: 1.15;
+    margin-bottom: 8px;
+  }
+  .header p {
+    font-size: 15px;
+    color: var(--text-body);
+    line-height: 1.4;
+    max-width: 280px;
+  }
+
+  /* ── Features ── */
+  .features {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-bottom: 32px;
+    animation: fadeSlideIn 0.6s ease-out 0.1s both;
+  }
+  .feature {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .feature-icon {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: var(--primary-dim);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .feature-icon svg { width: 18px; height: 18px; }
+  .feature span {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text);
+    letter-spacing: -0.1px;
+  }
+
+  /* ── Plan cards ── */
+  .plans {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 24px;
+    animation: fadeSlideIn 0.6s ease-out 0.2s both;
+  }
+  .plan {
+    position: relative;
+    display: flex;
+    align-items: center;
+    padding: 16px 18px;
+    border-radius: 14px;
+    border: 1.5px solid var(--border);
+    background: var(--surface);
+    cursor: pointer;
+    transition: border-color 0.25s, background 0.25s, box-shadow 0.25s, transform 0.15s;
+    user-select: none;
+    overflow: hidden;
+  }
+  .plan:hover {
+    border-color: rgba(46, 196, 182, 0.4);
+    background: var(--plan-hover-bg);
+  }
+  .plan:active { transform: scale(0.985); }
+  .plan.selected {
+    border-color: var(--primary);
+    background: var(--plan-selected-bg);
+    box-shadow: 0 0 0 1px rgba(46, 196, 182, 0.15), 0 4px 20px rgba(46, 196, 182, 0.08);
+  }
+
+  /* Radio */
+  .plan-radio {
+    flex-shrink: 0;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    margin-right: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color 0.25s, background 0.25s;
+  }
+  .plan.selected .plan-radio {
+    border-color: var(--primary);
+    background: var(--primary);
+  }
+  .plan-radio::after {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--on-primary);
+    opacity: 0;
+    transform: scale(0);
+    transition: opacity 0.2s, transform 0.2s;
+  }
+  .plan.selected .plan-radio::after { opacity: 1; transform: scale(1); }
+  .light .plan.selected .plan-radio::after { background: #FFFFFF; }
+
+  .plan-details { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+  .plan-name { font-size: 15px; font-weight: 600; color: var(--text); letter-spacing: -0.1px; }
+  .plan-sub { font-size: 13px; color: var(--text-muted); font-weight: 400; }
+  .plan-price { flex-shrink: 0; text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+  .plan-price .amount { font-size: 17px; font-weight: 700; color: var(--text); letter-spacing: -0.3px; }
+  .plan-price .period { font-size: 12px; color: var(--text-muted); font-weight: 400; }
+
+  .badge {
+    position: absolute;
+    top: -1px;
+    right: 16px;
+    background: var(--primary);
+    color: var(--on-primary);
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    padding: 4px 10px 5px;
+    border-radius: 0 0 8px 8px;
+  }
+  .savings {
+    display: inline-flex;
+    align-items: center;
+    background: var(--primary-soft);
+    color: var(--primary);
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 6px;
+    margin-left: 6px;
+    letter-spacing: 0.2px;
+  }
+
+  /* ── CTA ── */
+  .cta-area {
+    animation: fadeSlideIn 0.6s ease-out 0.3s both;
+    margin-bottom: 20px;
+  }
+  .cta-btn {
+    width: 100%;
+    padding: 17px 24px;
+    border: none;
+    border-radius: 18px;
+    background: var(--primary);
+    color: var(--on-primary);
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: -0.2px;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+    box-shadow: 0 4px 24px rgba(46, 196, 182, 0.3);
+    position: relative;
+    overflow: hidden;
+  }
+  .cta-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(255,255,255,0.15) 0%, transparent 50%);
+    border-radius: inherit;
+  }
+  .cta-btn:hover { background: #35D4C5; box-shadow: 0 6px 32px rgba(46, 196, 182, 0.4); }
+  .cta-btn:active { transform: scale(0.975); box-shadow: 0 2px 16px rgba(46, 196, 182, 0.25); }
+  .cta-sub { text-align: center; font-size: 12px; color: var(--text-muted); margin-top: 10px; line-height: 1.4; }
+
+  /* ── Footer ── */
+  .footer {
+    margin-top: auto;
+    padding-top: 16px;
+    text-align: center;
+    animation: fadeSlideIn 0.6s ease-out 0.4s both;
+  }
+  .footer-links { font-size: 12px; color: var(--text-muted); margin-bottom: 6px; }
+  .footer-links span { margin: 0 4px; opacity: 0.5; }
+  .legal-links { font-size: 11px; color: var(--text-muted); opacity: 0.6; }
+  .legal-links a { color: var(--text-muted); text-decoration: none; transition: color 0.2s; }
+  .legal-links a:hover { color: var(--text-body); }
+  .legal-links span { margin: 0 3px; opacity: 0.4; }
+
+  /* ── Status bar ── */
+  .status-bar {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 54px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    padding: 0 32px 8px;
+    z-index: 20;
+    pointer-events: none;
+  }
+  .status-bar .time { font-size: 15px; font-weight: 600; color: var(--text); }
+  .status-bar .icons { display: flex; gap: 5px; align-items: center; }
+  .status-bar .icons svg { width: 16px; height: 12px; fill: var(--text); }
+
+  /* ── Home indicator ── */
+  .home-indicator {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 134px;
+    height: 5px;
+    background: var(--home-indicator);
+    border-radius: 3px;
+    z-index: 20;
+  }
+
+  @keyframes fadeSlideIn {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== DARK MODE ===== -->
+<div class="phone-frame dark" style="margin-top: 40px;">
+  <span class="label">DARK MODE</span>
+  <div class="status-bar">
+    <span class="time">9:41</span>
+    <div class="icons">
+      <svg viewBox="0 0 17 12"><path d="M1.5 4.5h1c.55 0 1 .45 1 1v5c0 .55-.45 1-1 1h-1c-.55 0-1-.45-1-1v-5c0-.55.45-1 1-1zm4-2h1c.55 0 1 .45 1 1v7c0 .55-.45 1-1 1h-1c-.55 0-1-.45-1-1v-7c0-.55.45-1 1-1zm4-1.5h1c.55 0 1 .45 1 1v8.5c0 .55-.45 1-1 1h-1c-.55 0-1-.45-1-1V2c0-.55.45-1 1-1zm4-1h1c.55 0 1 .45 1 1V10.5c0 .55-.45 1-1 1h-1c-.55 0-1-.45-1-1V1c0-.55.45-1 1-1z"/></svg>
+      <svg viewBox="0 0 16 12"><path d="M8 3.6a5.8 5.8 0 0 1 4.1 1.7l1.4-1.4A8 8 0 0 0 8 1.2a8 8 0 0 0-5.5 2.2l1.4 1.4A5.8 5.8 0 0 1 8 3.6zm0 3.2a2.9 2.9 0 0 1 2.1.9l-2.1 2.1-2.1-2.1A2.9 2.9 0 0 1 8 6.8z"/></svg>
+      <svg viewBox="0 0 25 12"><rect x="0" y="1" width="22" height="10" rx="2" ry="2" fill="none" stroke="white" stroke-width="1" opacity="0.4"/><rect x="1.5" y="2.5" width="15" height="7" rx="1" fill="#2EC4B6"/><rect x="23" y="4" width="2" height="4" rx="0.5" fill="white" opacity="0.4"/></svg>
+    </div>
+  </div>
+
+  <div class="paywall">
+    <button class="close-btn" aria-label="Close">
+      <svg viewBox="0 0 14 14" fill="none" stroke="var(--close-stroke)" stroke-width="2" stroke-linecap="round"><line x1="1" y1="1" x2="13" y2="13"/><line x1="13" y1="1" x2="1" y2="13"/></svg>
+    </button>
+
+    <div class="header">
+      <div class="mascot-wrap">
+        <div class="mascot-glow"></div>
+        <svg width="88" height="88" viewBox="0 0 100 100">
+          <circle cx="50" cy="50" r="46" fill="#FFFFFF" stroke="#D8DCE4" stroke-width="1.5"/>
+          <circle cx="50" cy="50" r="38" fill="none" stroke="#E8EBF0" stroke-width="1"/>
+          <rect x="44" y="6" width="12" height="6" rx="3" fill="#D0D5DE"/>
+          <!-- Eyebrows -->
+          <path d="M33 40Q38 37 43 40" stroke="#C0C6D0" stroke-width="1.2" stroke-linecap="round" fill="none"/>
+          <path d="M57 40Q62 37 67 40" stroke="#C0C6D0" stroke-width="1.2" stroke-linecap="round" fill="none"/>
+          <!-- Left eye -->
+          <ellipse cx="38" cy="48" rx="5" ry="6" fill="#0F2027"/>
+          <circle cx="40" cy="46" r="1.8" fill="#FFFFFF"/>
+          <!-- Right eye (wink) -->
+          <path d="M57 47Q62 45 67 47" stroke="#0F2027" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+          <!-- Smile -->
+          <path d="M43 56Q50 62 57 56" stroke="#0F2027" stroke-width="2" stroke-linecap="round" fill="none"/>
+          <!-- Blush -->
+          <circle cx="32" cy="54" r="4" fill="#FBCCC4" opacity="0.7"/>
+          <circle cx="68" cy="54" r="4" fill="#FBCCC4" opacity="0.7"/>
+        </svg>
+      </div>
+      <h1>Unlock CarbTrack Pro</h1>
+      <p>Smarter carb counting, better glucose control</p>
+    </div>
+
+    <div class="features">
+      <div class="feature">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        </div>
+        <span>Unlimited AI food photo scans</span>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 0"/><path d="M12 17v.01"/><path d="M12 13a1.5 1.5 0 011.5-1.5"/></svg>
+        </div>
+        <span>AI-powered carb estimation</span>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
+        </div>
+        <span>Advanced reports &amp; trends</span>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+        </div>
+        <span>Priority support</span>
+      </div>
+    </div>
+
+    <div class="plans" id="dark-plans">
+      <div class="plan" onclick="selectPlan(this, 'dark')">
+        <div class="plan-radio"></div>
+        <div class="plan-details">
+          <div class="plan-name">Monthly</div>
+          <div class="plan-sub">Cancel anytime</div>
+        </div>
+        <div class="plan-price">
+          <span class="amount">$4.99</span>
+          <span class="period">per month</span>
+        </div>
+      </div>
+      <div class="plan selected" onclick="selectPlan(this, 'dark')">
+        <div class="badge">BEST VALUE</div>
+        <div class="plan-radio"></div>
+        <div class="plan-details">
+          <div class="plan-name">Yearly <span class="savings">Save 50%</span></div>
+          <div class="plan-sub">$2.49/mo billed annually</div>
+        </div>
+        <div class="plan-price">
+          <span class="amount">$29.99</span>
+          <span class="period">per year</span>
+        </div>
+      </div>
+      <div class="plan" onclick="selectPlan(this, 'dark')">
+        <div class="plan-radio"></div>
+        <div class="plan-details">
+          <div class="plan-name">Lifetime</div>
+          <div class="plan-sub">One-time purchase</div>
+        </div>
+        <div class="plan-price">
+          <span class="amount">$79.99</span>
+          <span class="period">forever</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="cta-area">
+      <button class="cta-btn">Start Free Trial</button>
+      <div class="cta-sub" id="dark-cta-sub">3-day free trial, then $29.99/year</div>
+    </div>
+
+    <div class="footer">
+      <div class="footer-links">Cancel anytime <span>&middot;</span> Restore purchases</div>
+      <div class="legal-links"><a href="#">Terms of Use</a> <span>&middot;</span> <a href="#">Privacy Policy</a></div>
+    </div>
+  </div>
+  <div class="home-indicator"></div>
+</div>
+
+<!-- ===== LIGHT MODE ===== -->
+<div class="phone-frame light" style="margin-top: 40px;">
+  <span class="label">LIGHT MODE</span>
+  <div class="status-bar">
+    <span class="time">9:41</span>
+    <div class="icons">
+      <svg viewBox="0 0 17 12"><path d="M1.5 4.5h1c.55 0 1 .45 1 1v5c0 .55-.45 1-1 1h-1c-.55 0-1-.45-1-1v-5c0-.55.45-1 1-1zm4-2h1c.55 0 1 .45 1 1v7c0 .55-.45 1-1 1h-1c-.55 0-1-.45-1-1v-7c0-.55.45-1 1-1zm4-1.5h1c.55 0 1 .45 1 1v8.5c0 .55-.45 1-1 1h-1c-.55 0-1-.45-1-1V2c0-.55.45-1 1-1zm4-1h1c.55 0 1 .45 1 1V10.5c0 .55-.45 1-1 1h-1c-.55 0-1-.45-1-1V1c0-.55.45-1 1-1z"/></svg>
+      <svg viewBox="0 0 16 12"><path d="M8 3.6a5.8 5.8 0 0 1 4.1 1.7l1.4-1.4A8 8 0 0 0 8 1.2a8 8 0 0 0-5.5 2.2l1.4 1.4A5.8 5.8 0 0 1 8 3.6zm0 3.2a2.9 2.9 0 0 1 2.1.9l-2.1 2.1-2.1-2.1A2.9 2.9 0 0 1 8 6.8z"/></svg>
+      <svg viewBox="0 0 25 12"><rect x="0" y="1" width="22" height="10" rx="2" ry="2" fill="none" stroke="#0F2027" stroke-width="1" opacity="0.3"/><rect x="1.5" y="2.5" width="15" height="7" rx="1" fill="#2EC4B6"/><rect x="23" y="4" width="2" height="4" rx="0.5" fill="#0F2027" opacity="0.3"/></svg>
+    </div>
+  </div>
+
+  <div class="paywall">
+    <button class="close-btn" aria-label="Close">
+      <svg viewBox="0 0 14 14" fill="none" stroke="var(--close-stroke)" stroke-width="2" stroke-linecap="round"><line x1="1" y1="1" x2="13" y2="13"/><line x1="13" y1="1" x2="1" y2="13"/></svg>
+    </button>
+
+    <div class="header">
+      <div class="mascot-wrap">
+        <div class="mascot-glow"></div>
+        <svg width="88" height="88" viewBox="0 0 100 100">
+          <circle cx="50" cy="50" r="46" fill="#FFFFFF" stroke="#D8DCE4" stroke-width="1.5"/>
+          <circle cx="50" cy="50" r="38" fill="none" stroke="#E8EBF0" stroke-width="1"/>
+          <rect x="44" y="6" width="12" height="6" rx="3" fill="#D0D5DE"/>
+          <path d="M33 40Q38 37 43 40" stroke="#C0C6D0" stroke-width="1.2" stroke-linecap="round" fill="none"/>
+          <path d="M57 40Q62 37 67 40" stroke="#C0C6D0" stroke-width="1.2" stroke-linecap="round" fill="none"/>
+          <ellipse cx="38" cy="48" rx="5" ry="6" fill="#0F2027"/>
+          <circle cx="40" cy="46" r="1.8" fill="#FFFFFF"/>
+          <path d="M57 47Q62 45 67 47" stroke="#0F2027" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+          <path d="M43 56Q50 62 57 56" stroke="#0F2027" stroke-width="2" stroke-linecap="round" fill="none"/>
+          <circle cx="32" cy="54" r="4" fill="#FBCCC4" opacity="0.7"/>
+          <circle cx="68" cy="54" r="4" fill="#FBCCC4" opacity="0.7"/>
+        </svg>
+      </div>
+      <h1>Unlock CarbTrack Pro</h1>
+      <p>Smarter carb counting, better glucose control</p>
+    </div>
+
+    <div class="features">
+      <div class="feature">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        </div>
+        <span>Unlimited AI food photo scans</span>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 0"/><path d="M12 17v.01"/><path d="M12 13a1.5 1.5 0 011.5-1.5"/></svg>
+        </div>
+        <span>AI-powered carb estimation</span>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
+        </div>
+        <span>Advanced reports &amp; trends</span>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+        </div>
+        <span>Priority support</span>
+      </div>
+    </div>
+
+    <div class="plans" id="light-plans">
+      <div class="plan" onclick="selectPlan(this, 'light')">
+        <div class="plan-radio"></div>
+        <div class="plan-details">
+          <div class="plan-name">Monthly</div>
+          <div class="plan-sub">Cancel anytime</div>
+        </div>
+        <div class="plan-price">
+          <span class="amount">$4.99</span>
+          <span class="period">per month</span>
+        </div>
+      </div>
+      <div class="plan selected" onclick="selectPlan(this, 'light')">
+        <div class="badge">BEST VALUE</div>
+        <div class="plan-radio"></div>
+        <div class="plan-details">
+          <div class="plan-name">Yearly <span class="savings">Save 50%</span></div>
+          <div class="plan-sub">$2.49/mo billed annually</div>
+        </div>
+        <div class="plan-price">
+          <span class="amount">$29.99</span>
+          <span class="period">per year</span>
+        </div>
+      </div>
+      <div class="plan" onclick="selectPlan(this, 'light')">
+        <div class="plan-radio"></div>
+        <div class="plan-details">
+          <div class="plan-name">Lifetime</div>
+          <div class="plan-sub">One-time purchase</div>
+        </div>
+        <div class="plan-price">
+          <span class="amount">$79.99</span>
+          <span class="period">forever</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="cta-area">
+      <button class="cta-btn">Start Free Trial</button>
+      <div class="cta-sub" id="light-cta-sub">3-day free trial, then $29.99/year</div>
+    </div>
+
+    <div class="footer">
+      <div class="footer-links">Cancel anytime <span>&middot;</span> Restore purchases</div>
+      <div class="legal-links"><a href="#">Terms of Use</a> <span>&middot;</span> <a href="#">Privacy Policy</a></div>
+    </div>
+  </div>
+  <div class="home-indicator"></div>
+</div>
+
+<script>
+  function selectPlan(el, theme) {
+    const container = document.getElementById(theme + '-plans');
+    container.querySelectorAll('.plan').forEach(p => p.classList.remove('selected'));
+    el.classList.add('selected');
+
+    const name = el.querySelector('.plan-name').textContent.trim().split(' ')[0];
+    const ctaSub = document.getElementById(theme + '-cta-sub');
+    if (name === 'Monthly') {
+      ctaSub.textContent = '3-day free trial, then $4.99/month';
+    } else if (name === 'Yearly') {
+      ctaSub.textContent = '3-day free trial, then $29.99/year';
+    } else {
+      ctaSub.textContent = 'One-time purchase of $79.99';
+    }
+  }
+</script>
+
+</body>
+</html>

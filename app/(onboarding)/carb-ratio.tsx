@@ -1,8 +1,7 @@
 import { useState } from 'react';
-import { StyleSheet, Text, View, ScrollView, Pressable } from 'react-native';
+import { StyleSheet, Text, View, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
 import { Button } from '@/components/ui/Button';
 import { Mascot } from '@/components/Mascot';
 import { Card } from '@/components/ui/Card';
@@ -15,6 +14,7 @@ import { useOnboardingStore } from '@/lib/store';
 import { getOnboardingProgress } from '@/lib/onboarding-flow';
 import { spacing, typography, borderRadius, colors as tokenColors } from '@/constants/tokens';
 import { DISCLAIMERS } from '@/constants/disclaimers';
+import { OnboardingBackButton, OnboardingMotionBlock } from '@/components/onboarding-motion';
 
 const QUICK_VALUES = [
   { label: '5', value: '5' },
@@ -64,25 +64,30 @@ export default function CarbRatioScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.bg }]}>
-      <Pressable onPress={() => router.back()} style={styles.backButton} hitSlop={12} accessibilityRole="button" accessibilityLabel="Go back">
-        <Ionicons name="chevron-back" size={24} color={colors.text} />
-      </Pressable>
-      <View style={styles.dotsWrapper}>
+      <OnboardingBackButton color={colors.text} onPress={() => router.back()} />
+      <OnboardingMotionBlock style={styles.dotsWrapper}>
         <ProgressDots total={progress.total} current={progress.current} />
-      </View>
+      </OnboardingMotionBlock>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <Text style={[styles.heading, { color: colors.text }]}>
-          What is your carb ratio?
-        </Text>
+        <OnboardingMotionBlock delay={60}>
+          <Text style={[styles.heading, { color: colors.text }]}>
+            What is your carb ratio?
+          </Text>
+        </OnboardingMotionBlock>
+        <OnboardingMotionBlock delay={90}>
         <Text style={[styles.helper, { color: colors.textSecondary }]}>
           {isExchanges
             ? 'Your carb ratio tells us how many exchanges are covered by 1 unit of insulin.'
             : 'Your carb ratio tells us how many grams of carbs are covered by 1 unit of insulin.'}
         </Text>
+        </OnboardingMotionBlock>
 
-        <DisclaimerBanner variant="warning" text={DISCLAIMERS.carbRatioBanner} />
+        <OnboardingMotionBlock delay={130}>
+          <DisclaimerBanner variant="warning" text={DISCLAIMERS.carbRatioBanner} />
+        </OnboardingMotionBlock>
 
+        <OnboardingMotionBlock delay={170}>
         <Card>
           <View style={styles.cardContent}>
             <Text style={[styles.cardLabel, { color: colors.textSecondary }]}>
@@ -110,23 +115,28 @@ export default function CarbRatioScreen() {
             />
           </View>
         </Card>
+        </OnboardingMotionBlock>
 
+        <OnboardingMotionBlock delay={210}>
         <Text style={[styles.footerText, { color: colors.textMuted }]}>
           You can change this anytime in Settings.
         </Text>
+        </OnboardingMotionBlock>
         {!!validationMessage && (
-          <Text style={styles.validationText}>{validationMessage}</Text>
+          <OnboardingMotionBlock delay={240}>
+            <Text style={styles.validationText}>{validationMessage}</Text>
+          </OnboardingMotionBlock>
         )}
       </ScrollView>
 
-      <View style={styles.footer}>
+      <OnboardingMotionBlock delay={270} style={styles.footer}>
         <Button fullWidth disabled={!isValidRatio} onPress={handleNext}>
           Next
         </Button>
-      </View>
-      <View style={styles.mascotFloat}>
+      </OnboardingMotionBlock>
+      <OnboardingMotionBlock delay={300} style={styles.mascotFloat}>
         <Mascot animate size={60} expression="lookUp" />
-      </View>
+      </OnboardingMotionBlock>
     </SafeAreaView>
   );
 }
@@ -134,12 +144,6 @@ export default function CarbRatioScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  backButton: {
-    paddingHorizontal: 16,
-    paddingTop: 8,
-    paddingBottom: 4,
-    alignSelf: 'flex-start' as const,
   },
   dotsWrapper: {
     paddingTop: spacing.base,

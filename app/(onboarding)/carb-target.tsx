@@ -1,8 +1,7 @@
 import { useState } from 'react';
-import { StyleSheet, Text, View, ScrollView, Pressable } from 'react-native';
+import { StyleSheet, Text, View, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
 import { Button } from '@/components/ui/Button';
 import { Mascot } from '@/components/Mascot';
 import { Card } from '@/components/ui/Card';
@@ -14,6 +13,7 @@ import { useThemeColors } from '@/lib/theme';
 import { useOnboardingStore } from '@/lib/store';
 import { getOnboardingProgress } from '@/lib/onboarding-flow';
 import { spacing, typography, borderRadius } from '@/constants/tokens';
+import { OnboardingBackButton, OnboardingMotionBlock } from '@/components/onboarding-motion';
 
 type TargetMode = 'known' | 'help' | 'skip';
 
@@ -85,36 +85,32 @@ export default function CarbTargetScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.primaryMuted }]}>
-      <Pressable
-        onPress={() => router.back()}
-        style={styles.backButton}
-        hitSlop={12}
-        accessibilityRole="button"
-        accessibilityLabel="Go back"
-      >
-        <Ionicons name="chevron-back" size={24} color={colors.text} />
-      </Pressable>
-      <View style={styles.dotsWrapper}>
+      <OnboardingBackButton color={colors.text} onPress={() => router.back()} />
+      <OnboardingMotionBlock style={styles.dotsWrapper}>
         <ProgressDots total={progress.total} current={progress.current} />
-      </View>
+      </OnboardingMotionBlock>
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.mascotSection}>
+        <OnboardingMotionBlock delay={60} style={styles.mascotSection}>
           <Mascot animate size={100} expression="happy" glow />
-        </View>
+        </OnboardingMotionBlock>
 
-        <Text style={[styles.heading, { color: colors.text }]}>
-          Daily carb target
-        </Text>
-        <Text style={[styles.helper, { color: colors.textSecondary }]}>
-          Setting a daily carb target helps you track your intake and stay on
-          course throughout the day.
-        </Text>
+        <OnboardingMotionBlock delay={100}>
+          <Text style={[styles.heading, { color: colors.text }]}>
+            Daily carb target
+          </Text>
+        </OnboardingMotionBlock>
+        <OnboardingMotionBlock delay={130}>
+          <Text style={[styles.helper, { color: colors.textSecondary }]}>
+            Setting a daily carb target helps you track your intake and stay on
+            course throughout the day.
+          </Text>
+        </OnboardingMotionBlock>
 
-        <View style={styles.options}>
+        <OnboardingMotionBlock delay={170} style={styles.options}>
           <RadioCard
             label="I know my target"
             sublabel="Enter your daily carb goal"
@@ -133,9 +129,10 @@ export default function CarbTargetScreen() {
             selected={mode === 'skip'}
             onPress={() => handleModeSelect('skip')}
           />
-        </View>
+        </OnboardingMotionBlock>
 
         {mode === 'known' && (
+          <OnboardingMotionBlock delay={220}>
           <Card>
             <View style={styles.cardContent}>
               <Text style={[styles.cardLabel, { color: colors.textSecondary }]}>
@@ -166,10 +163,11 @@ export default function CarbTargetScreen() {
               />
             </View>
           </Card>
+          </OnboardingMotionBlock>
         )}
 
         {mode === 'help' && (
-          <View style={styles.suggestions}>
+          <OnboardingMotionBlock delay={220} style={styles.suggestions}>
             {SUGGESTED_TARGETS.map((suggestion) => (
               <RadioCard
                 key={suggestion.value}
@@ -178,15 +176,15 @@ export default function CarbTargetScreen() {
                 onPress={() => handleSuggestionSelect(suggestion.value)}
               />
             ))}
-          </View>
+          </OnboardingMotionBlock>
         )}
       </ScrollView>
 
-      <View style={styles.footer}>
+      <OnboardingMotionBlock delay={270} style={styles.footer}>
         <Button fullWidth disabled={!canProceed} onPress={handleNext}>
           {mode === 'skip' ? 'Skip' : 'Next'}
         </Button>
-      </View>
+      </OnboardingMotionBlock>
     </SafeAreaView>
   );
 }
@@ -194,12 +192,6 @@ export default function CarbTargetScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  backButton: {
-    paddingHorizontal: 16,
-    paddingTop: 8,
-    paddingBottom: 4,
-    alignSelf: 'flex-start' as const,
   },
   dotsWrapper: {
     paddingTop: spacing.base,

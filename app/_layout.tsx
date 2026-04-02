@@ -15,6 +15,7 @@ import 'react-native-reanimated';
 
 import { useThemeProvider } from '@/lib/theme';
 import { useUserPreferencesStore } from '@/lib/store';
+import { useSubscriptionStore } from '@/lib/subscription-store';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -36,9 +37,14 @@ export default function RootLayout() {
     Outfit_700Bold,
   });
 
+  const initSubscription = useSubscriptionStore((s) => s.initialize);
+
   useEffect(() => {
-    if (fontsLoaded) SplashScreen.hideAsync();
-  }, [fontsLoaded]);
+    if (fontsLoaded) {
+      SplashScreen.hideAsync();
+      initSubscription();
+    }
+  }, [fontsLoaded, initSubscription]);
 
   const segments = useSegments();
 
@@ -63,6 +69,8 @@ export default function RootLayout() {
           <Stack.Screen name="(onboarding)" options={{ headerShown: false }} />
           <Stack.Screen name="(tabs)" options={{ headerShown: false, animation: 'fade' }} />
           <Stack.Screen name="new-entry" options={{ presentation: 'modal', headerShown: false, animation: 'slide_from_bottom' }} />
+          <Stack.Screen name="paywall" options={{ presentation: 'transparentModal', headerShown: false, animation: 'fade' }} />
+          <Stack.Screen name="customer-center" options={{ presentation: 'transparentModal', headerShown: false, animation: 'fade' }} />
           <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
         </Stack>
         <StatusBar style="auto" />

@@ -1,10 +1,11 @@
-import { StyleSheet, Text, View, ScrollView, Pressable } from 'react-native';
+import { StyleSheet, Text, View, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { router } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
 import { useThemeColors } from '@/lib/theme';
 import { spacing, typography } from '@/constants/tokens';
 import { TERMS_AND_CONDITIONS } from '@/constants/legal';
+import { OnboardingBackButton } from '@/components/onboarding-motion';
 
 export default function TermsScreen() {
   const colors = useThemeColors();
@@ -12,9 +13,7 @@ export default function TermsScreen() {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.bg }]}>
       <View style={[styles.header, { borderBottomColor: colors.borderFaint }]}>
-        <Pressable onPress={() => router.back()} style={styles.backButton} hitSlop={12} accessibilityRole="button" accessibilityLabel="Go back">
-          <Ionicons name="chevron-back" size={24} color={colors.text} />
-        </Pressable>
+        <OnboardingBackButton color={colors.text} onPress={() => router.back()} />
         <Text style={[styles.headerTitle, { color: colors.text }]}>
           {TERMS_AND_CONDITIONS.title}
         </Text>
@@ -22,19 +21,21 @@ export default function TermsScreen() {
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <Text style={[styles.lastUpdated, { color: colors.textMuted }]}>
-          Last updated: {TERMS_AND_CONDITIONS.lastUpdated}
-        </Text>
+        <Animated.View entering={FadeInDown.duration(220)}>
+          <Text style={[styles.lastUpdated, { color: colors.textMuted }]}>
+            Last updated: {TERMS_AND_CONDITIONS.lastUpdated}
+          </Text>
+        </Animated.View>
 
         {TERMS_AND_CONDITIONS.sections.map((section, index) => (
-          <View key={index} style={styles.section}>
+          <Animated.View key={index} entering={FadeInDown.delay(40 * (index + 1)).duration(220)} style={styles.section}>
             <Text style={[styles.sectionHeading, { color: colors.text }]}>
               {section.heading}
             </Text>
             <Text style={[styles.sectionBody, { color: colors.textSecondary }]}>
               {section.body}
             </Text>
-          </View>
+          </Animated.View>
         ))}
       </ScrollView>
     </SafeAreaView>
@@ -55,7 +56,6 @@ const styles = StyleSheet.create({
   },
   backButton: {
     width: 40,
-    alignItems: 'flex-start',
   },
   headerTitle: {
     fontFamily: typography.fontFamily.heading,

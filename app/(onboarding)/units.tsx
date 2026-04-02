@@ -1,7 +1,6 @@
-import { StyleSheet, Text, View, ScrollView, Pressable } from 'react-native';
+import { StyleSheet, Text, View, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
 import { Button } from '@/components/ui/Button';
 import { Mascot } from '@/components/Mascot';
 import { Card } from '@/components/ui/Card';
@@ -12,6 +11,7 @@ import { useThemeColors } from '@/lib/theme';
 import { useOnboardingStore } from '@/lib/store';
 import { getOnboardingProgress } from '@/lib/onboarding-flow';
 import { spacing, typography } from '@/constants/tokens';
+import { OnboardingBackButton, OnboardingMotionBlock } from '@/components/onboarding-motion';
 
 const GLUCOSE_OPTIONS = ['mg/dL', 'mmol/L'];
 const CARB_OPTIONS = ['Grams', 'Exchanges'];
@@ -34,21 +34,24 @@ export default function UnitsScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.bg }]}>
-      <Pressable onPress={() => router.back()} style={styles.backButton} hitSlop={12} accessibilityRole="button" accessibilityLabel="Go back">
-        <Ionicons name="chevron-back" size={24} color={colors.text} />
-      </Pressable>
-      <View style={styles.dotsWrapper}>
+      <OnboardingBackButton color={colors.text} onPress={() => router.back()} />
+      <OnboardingMotionBlock style={styles.dotsWrapper}>
         <ProgressDots total={progress.total} current={progress.current} />
-      </View>
+      </OnboardingMotionBlock>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <Text style={[styles.heading, { color: colors.text }]}>
-          What units do you use?
-        </Text>
-        <Text style={[styles.helper, { color: colors.textSecondary }]}>
-          Ask your healthcare professional if unsure.
-        </Text>
+        <OnboardingMotionBlock delay={60}>
+          <Text style={[styles.heading, { color: colors.text }]}>
+            What units do you use?
+          </Text>
+        </OnboardingMotionBlock>
+        <OnboardingMotionBlock delay={90}>
+          <Text style={[styles.helper, { color: colors.textSecondary }]}>
+            Ask your healthcare professional if unsure.
+          </Text>
+        </OnboardingMotionBlock>
 
+        <OnboardingMotionBlock delay={150}>
         <Card>
           <View style={styles.unitRows}>
             <View style={styles.unitRow}>
@@ -72,16 +75,17 @@ export default function UnitsScreen() {
             </View>
           </View>
         </Card>
+        </OnboardingMotionBlock>
       </ScrollView>
 
-      <View style={styles.footer}>
+      <OnboardingMotionBlock delay={210} style={styles.footer}>
         <Button fullWidth onPress={() => router.push('/(onboarding)/ranges')}>
           Next
         </Button>
-      </View>
-      <View style={styles.mascotFloat}>
+      </OnboardingMotionBlock>
+      <OnboardingMotionBlock delay={240} style={styles.mascotFloat}>
         <Mascot animate size={60} expression="lookUp" />
-      </View>
+      </OnboardingMotionBlock>
     </SafeAreaView>
   );
 }
@@ -89,12 +93,6 @@ export default function UnitsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  backButton: {
-    paddingHorizontal: 16,
-    paddingTop: 8,
-    paddingBottom: 4,
-    alignSelf: 'flex-start' as const,
   },
   dotsWrapper: {
     paddingTop: spacing.base,

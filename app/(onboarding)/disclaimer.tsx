@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { StyleSheet, Text, View, ScrollView, Pressable } from 'react-native';
+import { StyleSheet, Text, View, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -14,6 +14,7 @@ import { useOnboardingStore } from '@/lib/store';
 import { getOnboardingProgress, nextAfterDisclaimer } from '@/lib/onboarding-flow';
 import { spacing, typography, colors as tokenColors } from '@/constants/tokens';
 import { DISCLAIMERS } from '@/constants/disclaimers';
+import { OnboardingBackButton, OnboardingMotionBlock } from '@/components/onboarding-motion';
 
 export default function DisclaimerScreen() {
   const colors = useThemeColors();
@@ -29,22 +30,23 @@ export default function DisclaimerScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.bg }]}>
-      <Pressable onPress={() => router.back()} style={styles.backButton} hitSlop={12} accessibilityRole="button" accessibilityLabel="Go back">
-        <Ionicons name="chevron-back" size={24} color={colors.text} />
-      </Pressable>
-      <View style={styles.dotsWrapper}>
+      <OnboardingBackButton color={colors.text} onPress={() => router.back()} />
+      <OnboardingMotionBlock style={styles.dotsWrapper}>
         <ProgressDots total={progress.total} current={progress.current} />
-      </View>
+      </OnboardingMotionBlock>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <View style={styles.iconWrapper}>
+        <OnboardingMotionBlock delay={60} style={styles.iconWrapper}>
           <Ionicons name="alert-circle" size={56} color={tokenColors.glucose.high} />
-        </View>
+        </OnboardingMotionBlock>
 
-        <Text style={[styles.heading, { color: colors.text }]}>
-          Important Disclaimer
-        </Text>
+        <OnboardingMotionBlock delay={90}>
+          <Text style={[styles.heading, { color: colors.text }]}>
+            Important Disclaimer
+          </Text>
+        </OnboardingMotionBlock>
 
+        <OnboardingMotionBlock delay={140}>
         <Card>
           <View style={styles.cardContent}>
             <DisclaimerBanner variant="danger" text={DISCLAIMERS.onboarding.body} />
@@ -61,15 +63,18 @@ export default function DisclaimerScreen() {
             </View>
           </View>
         </Card>
+        </OnboardingMotionBlock>
 
+        <OnboardingMotionBlock delay={190}>
         <Checkbox
           checked={accepted}
           onToggle={handleToggle}
           label={DISCLAIMERS.onboarding.checkbox}
         />
+        </OnboardingMotionBlock>
       </ScrollView>
 
-      <View style={styles.footer}>
+      <OnboardingMotionBlock delay={240} style={styles.footer}>
         <Button
           fullWidth
           disabled={!accepted}
@@ -77,10 +82,10 @@ export default function DisclaimerScreen() {
         >
           I Understand
         </Button>
-      </View>
-      <View style={styles.mascotFloat}>
+      </OnboardingMotionBlock>
+      <OnboardingMotionBlock delay={270} style={styles.mascotFloat}>
         <Mascot animate size={60} expression="lookUp" />
-      </View>
+      </OnboardingMotionBlock>
     </SafeAreaView>
   );
 }
@@ -88,12 +93,6 @@ export default function DisclaimerScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  backButton: {
-    paddingHorizontal: 16,
-    paddingTop: 8,
-    paddingBottom: 4,
-    alignSelf: 'flex-start' as const,
   },
   dotsWrapper: {
     paddingTop: spacing.base,

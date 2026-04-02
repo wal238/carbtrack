@@ -1,14 +1,19 @@
-import { StyleSheet, Text, View, ScrollView, Pressable } from 'react-native';
+import { useState, useEffect } from 'react';
+import { StyleSheet, Text, View, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import Purchases from 'react-native-purchases';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { ProgressDots } from '@/components/ui/ProgressDots';
 import { useThemeColors } from '@/lib/theme';
 import { useUserPreferencesStore, useOnboardingStore } from '@/lib/store';
+import { useSubscriptionStore } from '@/lib/subscription-store';
+import { presentPaywall } from '@/lib/present-paywall';
 import { getOnboardingProgress } from '@/lib/onboarding-flow';
 import { spacing, typography, borderRadius, colors as tokenColors } from '@/constants/tokens';
+import { OnboardingBackButton, OnboardingMotionBlock } from '@/components/onboarding-motion';
 
 const FREE_FEATURES = [
   'Manual carb entry',
@@ -24,7 +29,6 @@ const PRO_FEATURES = [
   'Advanced reports & trends',
 ];
 
-// Structured for easy RevenueCat integration later
 const PLANS = {
   free: {
     id: 'free',
@@ -33,9 +37,9 @@ const PLANS = {
     features: FREE_FEATURES,
   },
   pro: {
-    id: 'pro_monthly', // Will match RevenueCat offering ID
+    id: 'pro_monthly',
     name: 'CarbTrack Pro',
-    price: '$4.99/mo', // Placeholder — will come from RevenueCat
+    priceFallback: '$4.99/mo',
     features: PRO_FEATURES,
   },
 } as const;
@@ -44,7 +48,24 @@ export default function PricingScreen() {
   const colors = useThemeColors();
   const completeOnboarding = useUserPreferencesStore((s) => s.completeOnboarding);
   const onboardingStore = useOnboardingStore();
+  const isInitialized = useSubscriptionStore((s) => s.isInitialized);
   const progress = getOnboardingProgress('pricing', onboardingStore.insulinTherapy);
+  const [proPrice, setProPrice] = useState<string>(PLANS.pro.priceFallback);
+
+  useEffect(() => {
+    if (!isInitialized) return;
+
+    Purchases.getOfferings()
+      .then((offerings) => {
+        const monthly = offerings.current?.monthly;
+        if (monthly) {
+          setProPrice(`${monthly.product.priceString}/mo`);
+        }
+      })
+      .catch((err) => {
+        if (__DEV__) console.warn('[Pricing] Failed to load offerings:', err);
+      });
+  }, [isInitialized]);
 
   function handleContinue() {
     // Commit onboarding selections to persisted preferences
@@ -70,25 +91,28 @@ export default function PricingScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.bg }]}>
-      <Pressable onPress={() => router.back()} style={styles.backButton} hitSlop={12} accessibilityRole="button" accessibilityLabel="Go back">
-        <Ionicons name="chevron-back" size={24} color={colors.text} />
-      </Pressable>
-      <View style={styles.dotsWrapper}>
+      <OnboardingBackButton color={colors.text} onPress={() => router.back()} />
+      <OnboardingMotionBlock style={styles.dotsWrapper}>
         <ProgressDots total={progress.total} current={progress.current} />
-      </View>
+      </OnboardingMotionBlock>
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={[styles.heading, { color: colors.text }]}>
-          Choose your plan
-        </Text>
-        <Text style={[styles.subtext, { color: colors.textSecondary }]}>
-          Start free, upgrade anytime
-        </Text>
+        <OnboardingMotionBlock delay={60}>
+          <Text style={[styles.heading, { color: colors.text }]}>
+            Choose your plan
+          </Text>
+        </OnboardingMotionBlock>
+        <OnboardingMotionBlock delay={90}>
+          <Text style={[styles.subtext, { color: colors.textSecondary }]}>
+            Start free, upgrade anytime
+          </Text>
+        </OnboardingMotionBlock>
 
         {/* Free Plan */}
+        <OnboardingMotionBlock delay={140}>
         <Card>
           <View style={styles.planHeader}>
             <Text style={[styles.planName, { color: colors.text }]}>
@@ -115,8 +139,10 @@ export default function PricingScreen() {
             ))}
           </View>
         </Card>
+        </OnboardingMotionBlock>
 
         {/* Pro Plan */}
+        <OnboardingMotionBlock delay={190}>
         <View
           style={[
             styles.proCardWrapper,
@@ -134,7 +160,7 @@ export default function PricingScreen() {
                   {PLANS.pro.name}
                 </Text>
                 <Text style={[styles.priceText, { color: colors.textSecondary }]}>
-                  {PLANS.pro.price}
+                  {proPrice}
                 </Text>
               </View>
               <View style={[styles.badge, { backgroundColor: colors.primary }]}>
@@ -168,20 +194,20 @@ export default function PricingScreen() {
             </View>
           </View>
         </View>
+        </OnboardingMotionBlock>
       </ScrollView>
 
-      <View style={styles.footer}>
-        {/* TODO: Wire up RevenueCat purchase flow */}
-        <Button fullWidth disabled>
-          Try Pro Free (Coming Soon)
+      <OnboardingMotionBlock delay={240} style={styles.footer}>
+        <Button fullWidth onPress={() => presentPaywall()}>
+          Try Pro Free
         </Button>
         <Button fullWidth variant="ghost" onPress={handleContinue}>
           Continue with Free
         </Button>
         <Text style={[styles.footerNote, { color: colors.textMuted }]}>
-          Subscriptions are not available yet. You can continue with Free now and upgrade later.
+          You can change your plan anytime in Settings.
         </Text>
-      </View>
+      </OnboardingMotionBlock>
     </SafeAreaView>
   );
 }
@@ -189,12 +215,6 @@ export default function PricingScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  backButton: {
-    paddingHorizontal: 16,
-    paddingTop: 8,
-    paddingBottom: 4,
-    alignSelf: 'flex-start' as const,
   },
   scrollContent: {
     paddingHorizontal: spacing.xl,
